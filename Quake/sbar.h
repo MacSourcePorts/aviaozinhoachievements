@@ -44,6 +44,7 @@ void Sbar_FinaleOverlay (void);
 
 #ifdef BDDPRE4
 void Sbar_FinaleReset (void);
+qboolean Sbar_FinaleSkip (void);
 #endif
 
 //csqc needs some of the helpers.

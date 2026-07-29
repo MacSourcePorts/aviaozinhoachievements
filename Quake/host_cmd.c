@@ -4103,6 +4103,11 @@ Host_Begin_f
 */
 static void Host_Begin_f(void)
 {
+	int old_self;
+	int old_other;
+	int old_msg_entity;
+	edict_t* player;
+
 	if (cmd_source != src_client)
 	{
 		Con_Printf("begin is not valid from the console\n");
@@ -4110,6 +4115,25 @@ static void Host_Begin_f(void)
 	}
 
 	host_client->spawned = true;
+
+	if (!qcvm->extfuncs.GameHosted)
+		return;
+
+	player = host_client->edict;
+
+	old_self = pr_global_struct->self;
+	old_other = pr_global_struct->other;
+	old_msg_entity = pr_global_struct->msg_entity;
+
+	pr_global_struct->self = EDICT_TO_PROG(player);
+	pr_global_struct->other = EDICT_TO_PROG(player);
+	pr_global_struct->msg_entity = EDICT_TO_PROG(player);
+
+	PR_ExecuteProgram(qcvm->extfuncs.GameHosted);
+
+	pr_global_struct->self = old_self;
+	pr_global_struct->other = old_other;
+	pr_global_struct->msg_entity = old_msg_entity;
 }
 
 //===========================================================================

@@ -4566,7 +4566,9 @@ void SCR_UpdateScreen(void)
 	else if (cl.intermission == 2 && key_dest == key_game) //end of episode
 	{
 		Sbar_FinaleOverlay();
+#ifndef BDDPRE4
 		SCR_CheckDrawCenterString();
+#endif
 		SCR_DrawDemoControls(); // woods (iw) #democontrols
 	}
 	else

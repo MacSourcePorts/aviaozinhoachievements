@@ -1053,36 +1053,242 @@ void Sbar_DrawInventorySA(void)
 		Sbar_DrawString(x, 32, num);
 	}
 
+	/*
+	 * Shared fade animation.
+	 *
+	 * sinf() returns -1..1, converted here to 0..1.
+	 */
+	const float fadeSpeed = 7.0f;
+	float fadeFactor =
+		0.5f + 0.5f * sinf((float)cl.time * fadeSpeed);
+
+	/*
+	 * Health:
+	 *
+	 * 0-100   = red base bar
+	 * 101-200 = animated green overlay
+	 */
 	int health = cl.stats[STAT_HEALTH];
-	float healthFactor = (float)health / 100.0f;
-	healthFactor = CLAMP(0.0f, healthFactor, 1.0f);
 
-	SBar_DrawQuad(211, 23, 64, 6, 0.0f, 0.0f, 0.0f);
-	SBar_DrawQuad(212, 24, 62, 4, 0.2f, 0.2f, 0.2f);
-	SBar_DrawQuad(212, 24, 62 * healthFactor, 4, 0.7f, 0.0f, 0.0f);
+	float healthFactor =
+		(float)health / 100.0f;
 
+	healthFactor =
+		CLAMP(0.0f, healthFactor, 1.0f);
+
+	float bonusHealthFactor =
+		(float)(health - 100) / 100.0f;
+
+	bonusHealthFactor =
+		CLAMP(0.0f, bonusHealthFactor, 1.0f);
+
+	SBar_DrawQuad(
+		211,
+		23,
+		64,
+		6,
+		0.0f,
+		0.0f,
+		0.0f);
+
+	SBar_DrawQuad(
+		212,
+		24,
+		62,
+		4,
+		0.2f,
+		0.2f,
+		0.2f);
+
+	/* Standard health layer. */
+	SBar_DrawQuad(
+		212,
+		24,
+		62.0f * healthFactor,
+		4,
+		0.7f,
+		0.0f,
+		0.0f);
+
+	// Health above 100:
+	if (bonusHealthFactor > 0.0f) {
+		const float lightRed = 79.0f / 255.0f;
+		const float lightGreen = 155.0f / 255.0f;
+		const float lightBlue = 66.0f / 255.0f;
+
+		const float darkRed = 62.0f / 255.0f;
+		const float darkGreen = 120.0f / 255.0f;
+		const float darkBlue = 52.0f / 255.0f;
+
+		float red =
+			lightRed +
+			(darkRed - lightRed) * fadeFactor;
+
+		float green =
+			lightGreen +
+			(darkGreen - lightGreen) * fadeFactor;
+
+		float blue =
+			lightBlue +
+			(darkBlue - lightBlue) * fadeFactor;
+
+		SBar_DrawQuad(
+			212,
+			24,
+			62.0f * bonusHealthFactor,
+			4,
+			red,
+			green,
+			blue);
+
+		sb_updates = 0;
+	}
+
+	/*
+	 * Dash bars.
+	 */
 	const float widthPerDash = 64.0f / 3.0f;
-	int dashIndex = cl.stats[STAT_DASH_INDEX];
-	float dashFactor = (float)cl.stats[STAT_DASH_PERC] / 100.0f;
+
+	int dashIndex =
+		cl.stats[STAT_DASH_INDEX];
+
+	float dashFactor =
+		(float)cl.stats[STAT_DASH_PERC] / 100.0f;
+
+	dashFactor =
+		CLAMP(0.0f, dashFactor, 1.0f);
+
 	for (int i = 0; i < 3; i++) {
-		SBar_DrawQuad(211 + (widthPerDash) * i, 30, widthPerDash, 6, 0.0f, 0.0f, 0.0f);
-		SBar_DrawQuad(212 + (widthPerDash) * i, 31, widthPerDash - 2.0f, 4, 0.2f, 0.2f, 0.2f);
+		float dashX =
+			211.0f + widthPerDash * i;
+
+		float dashInnerX =
+			212.0f + widthPerDash * i;
+
+		float dashInnerWidth =
+			widthPerDash - 2.0f;
+
+		SBar_DrawQuad(
+			dashX,
+			30,
+			widthPerDash,
+			6,
+			0.0f,
+			0.0f,
+			0.0f);
+
+		SBar_DrawQuad(
+			dashInnerX,
+			31,
+			dashInnerWidth,
+			4,
+			0.2f,
+			0.2f,
+			0.2f);
+
 		if (dashIndex == i) {
-			SBar_DrawQuad(212 + (widthPerDash) * i, 31, (widthPerDash - 2.0f) * dashFactor, 4, 0.31f, 0.42f, 0.66f);
+			SBar_DrawQuad(
+				dashInnerX,
+				31,
+				dashInnerWidth * dashFactor,
+				4,
+				0.31f,
+				0.42f,
+				0.66f);
 		}
 		else if (dashIndex > i) {
-			SBar_DrawQuad(212 + (widthPerDash) * i, 31, widthPerDash - 2.0f, 4, 0.31f, 0.42f, 0.66f);
+			SBar_DrawQuad(
+				dashInnerX,
+				31,
+				dashInnerWidth,
+				4,
+				0.31f,
+				0.42f,
+				0.66f);
 		}
 	}
 
 	int armor = cl.stats[STAT_ARMOR];
-	if (armor != 0)
-	{
-		float armorFactor = (float)armor / 100.0f;
-		armorFactor = CLAMP(0.0f, armorFactor, 1.0f);
-		SBar_DrawQuad(211, 37, 64, 6, 0.0f, 0.0f, 0.0f);
-		SBar_DrawQuad(212, 38, 62, 4, 0.2f, 0.2f, 0.2f);
-		SBar_DrawQuad(212, 38, 62 * armorFactor, 4, 1.0f, 1.0f, 1.0f);
+
+	if (armor != 0) {
+		float armorFactor =
+			(float)armor / 100.0f;
+
+		armorFactor =
+			CLAMP(0.0f, armorFactor, 1.0f);
+
+		float bonusArmorFactor =
+			(float)(armor - 100) / (666.0f - 100.0f);
+
+		bonusArmorFactor =
+			CLAMP(0.0f, bonusArmorFactor, 1.0f);
+
+		SBar_DrawQuad(
+			211,
+			37,
+			64,
+			6,
+			0.0f,
+			0.0f,
+			0.0f);
+
+		SBar_DrawQuad(
+			212,
+			38,
+			62,
+			4,
+			0.2f,
+			0.2f,
+			0.2f);
+
+		/* Standard armor layer. */
+		SBar_DrawQuad(
+			212,
+			38,
+			62.0f * armorFactor,
+			4,
+			1.0f,
+			1.0f,
+			1.0f);
+
+		/*
+		 * Armor above 100:
+		 *
+		 * Light: #9C4382
+		 * Dark:  #783463
+		 */
+		if (bonusArmorFactor > 0.0f) {
+			const float lightRed = 156.0f / 255.0f;
+			const float lightGreen = 67.0f / 255.0f;
+			const float lightBlue = 130.0f / 255.0f;
+
+			const float darkRed = 120.0f / 255.0f;
+			const float darkGreen = 52.0f / 255.0f;
+			const float darkBlue = 99.0f / 255.0f;
+
+			float red =
+				lightRed +
+				(darkRed - lightRed) * fadeFactor;
+
+			float green =
+				lightGreen +
+				(darkGreen - lightGreen) * fadeFactor;
+
+			float blue =
+				lightBlue +
+				(darkBlue - lightBlue) * fadeFactor;
+
+			SBar_DrawQuad(
+				212,
+				38,
+				62.0f * bonusArmorFactor,
+				4,
+				red,
+				green,
+				blue);
+
+			sb_updates = 0;
+		}
 	}
 }
 
@@ -3036,6 +3242,20 @@ void Sbar_FinaleReset(void)
 	intermissionTime = 0.0;
 	creditsScrollEndTime = 0.0;
 	creditsChangedLevel = false;
+}
+
+qboolean Sbar_FinaleSkip(void)
+{
+	if (cl.intermission != 2 || cls.state != ca_connected || cls.demoplayback)
+		return false;
+
+	if (!creditsChangedLevel)
+	{
+		creditsChangedLevel = true;
+		Cbuf_AddText("changelevel " CREDITS_FIRST_MAP "\n");
+	}
+
+	return true;
 }
 
 static void Sbar_DrawBlackFade(float alpha)

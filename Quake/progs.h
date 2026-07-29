@@ -174,7 +174,8 @@ struct pr_extfuncs_s
 {
 /*all vms*/
 #define QCEXTFUNCS_COMMON \
-	QCEXTFUNC(GameCommand,				"void(string cmdtext)")												/*obsoleted by m_consolecommand, included for dp compat.*/	\
+	QCEXTFUNC(GameCommand,				"void(string cmdtext)") \
+	QCEXTFUNC(GameHosted, "void()") \
 /*csqc+ssqc*/
 #define QCEXTFUNCS_GAME \
 	QCEXTFUNC(EndFrame,					"void()")				\

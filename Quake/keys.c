@@ -2071,6 +2071,16 @@ void Key_EventWithKeycode (int key, qboolean down, int keycode)
 		return;
 	}
 
+#ifdef BDDPRE4
+	// any key skips the finale credits straight to the first level,
+	// like the standard end of the svc_finale chain
+	if (down && !wasdown && key_dest == key_game && key != K_ESCAPE)
+	{
+		if (Sbar_FinaleSkip())
+			return;
+	}
+#endif
+
 	// demo controls -- woods (iw) #democontrols
 
 	if (cls.demoplayback && key_dest == key_game)
