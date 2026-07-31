@@ -110,7 +110,11 @@ cvar_t		scr_sbarscale = { "scr_sbarscale", "1", CVAR_ARCHIVE };
 cvar_t		scr_sbaralpha = { "scr_sbaralpha", "0.75", CVAR_ARCHIVE }; // woods #sbarstyles
 cvar_t		scr_sbaralphaqwammo = { "scr_sbaralphaqwammo", "1", CVAR_ARCHIVE };
 cvar_t		scr_sbarshowqeammo = { "scr_sbarshowqeammo", "1", CVAR_ARCHIVE }; // woods
+#ifdef BDDPRE4
+cvar_t		scr_sbar = { "scr_sbar", "4", CVAR_ARCHIVE }; // woods #sbarstyles
+#else
 cvar_t		scr_sbar = { "scr_sbar", "1", CVAR_ARCHIVE }; // woods #sbarstyles
+#endif
 cvar_t		scr_sbarfacecolor = { "scr_sbarfacecolor", "1", CVAR_ARCHIVE }; // woods #teamface
 cvar_t		scr_conwidth = { "scr_conwidth", "0", CVAR_ARCHIVE };
 cvar_t		scr_conscale = { "scr_conscale", "6", CVAR_ARCHIVE };
@@ -527,6 +531,8 @@ static void SCR_DrawCenterStringBG(int y, float alpha) // woods #centerprintbg (
 	}
 }
 
+#define SA_SPEEDBAR_Y 166
+
 void SCR_DrawCenterStringBottom(void)
 {
 	char* start;
@@ -602,16 +608,32 @@ void SCR_DrawCenterStringBottom(void)
 	{
 		int total_height = scr_center_lines * 8;
 
+#ifdef BDDPRE4
+		float fit = ((float)glwidth / (float)glheight > 320.0f / 200.0f)
+			? (float)glheight / 200.0f
+			: (float)glwidth / 320.0f;
+
+		float smallscale = fit * 0.75f;
+		float smallbase = ((float)glheight - 200.0f * smallscale) * 0.5f;
+
+		float bartop =
+			(200.0f - (float)(SA_SPEEDBAR_Y - 1)) *
+			GL_HudScaleSA() *
+			(200.0f * fit / 188.0f);
+
+		float bottom = 200.0f - (bartop - smallbase) / smallscale;
+
+		if (bottom > 200.0f)
+			bottom = 200.0f;
+
+		y = (int)floor(bottom) - total_height;
+#else
 		// desired real-screen margin from bottom
 		int bottom_margin = 0;
 
-#ifdef BDDPRE4
-		bottom_margin =
-			(int)(bottom_margin / 0.75f + 0.5f);
-#endif
-
 		// anchor text block to bottom
 		y = 200 - total_height - bottom_margin;
+#endif
 
 		if (crosshair.value)
 			y -= 8;
@@ -1102,6 +1124,19 @@ static void Clock_Completion_f(cvar_t* cvar, const char* partial)
 	return;
 }
 
+static void SCR_Sbar_f(cvar_t* var)
+{
+#ifdef BDDPRE4
+	if (var->value != 4)
+		Cvar_SetQuick(var, "4");
+#else
+	if (var->value < 1)
+		Cvar_SetQuick(var, "1");
+	else if (var->value > 3)
+		Cvar_SetQuick(var, "3");
+#endif
+}
+
 /*
 ==================
 SCR_Init
@@ -1117,6 +1152,7 @@ void SCR_Init(void)
 	Cvar_RegisterVariable(&scr_sbaralpha);
 	Cvar_RegisterVariable(&scr_sbaralphaqwammo); // woods #sbarstyles
 	Cvar_RegisterVariable(&scr_sbarshowqeammo); // woods #sbarstyles
+	Cvar_SetCallback(&scr_sbar, &SCR_Sbar_f);
 	Cvar_RegisterVariable(&scr_sbar); // woods #sbarstyles
 	Cvar_RegisterVariable(&scr_sbarfacecolor); // woods #teamface
 	Cvar_SetCallback(&scr_conwidth, &SCR_Conwidth_f);
@@ -1235,6 +1271,17 @@ void SCR_DrawFPS(void)
 			q_snprintf(st, sizeof(st), "%4.0f fps", lastfps);
 
 		x = 312 - (strlen(st) << 3); // woods added padding
+
+		if (clampedSbar == 4)
+		{
+			GL_SetCanvasSATopLeft();
+			Draw_String(4, 5 + 24, st + strspn(st, " "));
+			GL_EndCanvasSA();
+
+			scr_tileclear_updates = 0;
+			return;
+		}
+
 		if (clampedSbar == 3 && scr_viewsize.value <= 110) // woods #qehud
 		{
 			GL_SetCanvas(CANVAS_BOTTOMRIGHTQESMALL);
@@ -1516,8 +1563,9 @@ void SCR_DrawClock(void)
 	else
 	{
 		if (clampedSbar == 4) {
-			GL_SetCanvas(CANVAS_SA);
+			GL_SetCanvasSA();
 			Draw_String_Right(320 - 4 - 32 - 4 - 4, 5 + 24, str);
+			GL_EndCanvasSA();
 			scr_tileclear_updates = 0;
 			return;
 		}
@@ -2474,8 +2522,16 @@ void SCR_Speedometer(void)
 	char st[8];
 	float alpha = 0.5;
 	int y = scr_showspeed_y.value;
+	int clampedSbar = CLAMP(1, (int)scr_sbar.value, 4);
+	qboolean sa_hud = (clampedSbar == 4);
 
-	GL_SetCanvas(CANVAS_SBAR2);
+	if (sa_hud)
+	{
+		GL_SetCanvasSABottomCenter();
+		y = SA_SPEEDBAR_Y;
+	}
+	else
+		GL_SetCanvas(CANVAS_SBAR2);
 
 	if (lastrealtime > realtime)
 	{
@@ -2519,7 +2575,13 @@ void SCR_Speedometer(void)
 				speedunits -= 500;
 			Draw_Fill(x, y, (int)(speedunits / 3.125), 9, 68, alpha);
 		}
-		Draw_String(x + 36 - (strlen(st) * 8), y, st);
+		if (sa_hud)
+		{
+			const char* num = st + strspn(st, " ");
+			Draw_String(x + 80 - (strlen(num) * 4), y, num);
+		}
+		else
+			Draw_String(x + 36 - (strlen(st) * 8), y, st);
 	}
 
 	if (realtime - lastrealtime >= 0.0)
@@ -2528,6 +2590,9 @@ void SCR_Speedometer(void)
 		display_speed = maxspeed;
 		maxspeed = 0;
 	}
+
+	if (sa_hud)
+		GL_EndCanvasSA();
 }
 
 /*
@@ -2555,7 +2620,15 @@ void SCR_DrawSpeed(void)
 	if (scr_viewsize.value > 110 || scr_viewsize.value >= 130)
 		return;
 
-	if (clampedSbar == 3)
+	qboolean sa_hud = (clampedSbar == 4);
+
+	if (sa_hud)
+	{
+		GL_SetCanvasSABottomLeft();
+		x = 4;
+		y = 178;
+	}
+	else if (clampedSbar == 3)
 	{
 		GL_SetCanvas(CANVAS_BOTTOMLEFTQE);
 		y = 177;
@@ -2590,6 +2663,9 @@ void SCR_DrawSpeed(void)
 				M_PrintWhite(x, y, st);  // white
 		}
 	}
+
+	if (sa_hud)
+		GL_EndCanvasSA();
 }
 
 /*
@@ -2627,6 +2703,11 @@ void SCR_DrawMovementKeys(void)
 		y = (scr_showspeed.value == 1) ? 148 : 166;
 		GL_SetCanvas(CANVAS_BOTTOMLEFTQESMALL);
 		break;
+	case 4:
+		x = 12;
+		y = (scr_showspeed.value == 1) ? 158 : 172;
+		GL_SetCanvasSABottomLeft();
+		break;
 	default:
 		return; // Invalid clampedSbar value
 	}
@@ -2644,6 +2725,9 @@ void SCR_DrawMovementKeys(void)
 		M_Print(x, y - 1, "j");
 	else if (in_up.state & 1)
 		M_Print(x, y - 1, "s");
+
+	if (clampedSbar == 4)
+		GL_EndCanvasSA();
 }
 
 /*

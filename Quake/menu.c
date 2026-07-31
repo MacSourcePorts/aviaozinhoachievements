@@ -8029,7 +8029,9 @@ static enum hud_e
 	HUD_SCALE,
 	HUD_SCRSIZE,
 	HUD_SBALPHA,
+#ifndef BDDPRE4
 	HUD_SBARSTYLE,
+#endif
 	HUD_SHOWFPS,
 	HUD_MATCHSCORES,
 	HUD_MATCHCLOCK,
@@ -8072,8 +8074,10 @@ static const char* M_HUD_GetItemText(int index)
 		return LOC_GetString("$menu_screen_size");
 	case HUD_SBALPHA:
 		return LOC_GetString("$menu_statusbar_alpha");
+#ifndef BDDPRE4
 	case HUD_SBARSTYLE:
 		return LOC_GetString("$menu_status_bar_style");
+#endif
 	case HUD_SHOWFPS:
 		return LOC_GetString("$menu_show_fps");
 	case HUD_MATCHSCORES:
@@ -8146,17 +8150,14 @@ static void M_HUD_AdjustSliders(int dir)
 		else if (f > 1) f = 1;
 		Cvar_SetValue("scr_sbaralpha", f);
 		break;
+#ifndef BDDPRE4
 	case HUD_SBARSTYLE:
 		value = scr_sbar.value + dir;
-#ifdef BDDPRE4
-		if (value > 4) value = 1;
-		if (value < 1) value = 4;
-#else
 		if (value > 3) value = 1;
 		if (value < 1) value = 3;
-#endif
 		Cvar_SetValue("scr_sbar", value);
 		break;
+#endif
 
 	case HUD_SHOWFPS:
 		Cvar_SetValue("scr_showfps", !scr_showfps.value);
@@ -8259,6 +8260,7 @@ void M_HUD_Draw(void)
 			M_DrawSlider(186, y, r, 100.0f * r, "%.0f%%");
 			break;
 
+#ifndef BDDPRE4
 		case HUD_SBARSTYLE:
 			text = LOC_GetString("$menu_status_bar_style_indented");
 			switch ((int)scr_sbar.value)
@@ -8266,13 +8268,11 @@ void M_HUD_Draw(void)
 			case 1: value = LOC_GetString("$menu_classic"); break;
 			case 2: value = LOC_GetString("$menu_quakeworld"); break;
 			case 3: value = LOC_GetString("$menu_modern_remaster"); break;
-#ifdef BDDPRE4
-			case 4: value = LOC_GetString("$menu_bdd35"); break;
-#endif
 			default: value = LOC_GetString("$menu_unknown"); break;
 			}
 			M_Print(178, y, value);
 			break;
+#endif
 
 		case HUD_SHOWFPS:
 			text = LOC_GetString("$menu_show_fps_indented");
@@ -8482,17 +8482,15 @@ void M_HUD_Key(int k)
 		case HUD_CROSSHAIR:
 			M_Menu_Crosshair_f();
 			break;
+#ifndef BDDPRE4
 		case HUD_SBARSTYLE:
 		{
 			int value = scr_sbar.value + 1;
-#ifdef BDDPRE4
-			if (value > 4) value = 1;
-#else
 			if (value > 3) value = 1;
-#endif
 			Cvar_SetValue("scr_sbar", value);
 			break;
 		}
+#endif
 		case HUD_SHOWFPS:
 			Cvar_SetValue("scr_showfps", !scr_showfps.value);
 			break;
@@ -8541,16 +8539,14 @@ void M_HUD_Key(int k)
 			{
 				hud_slider_grab = true;
 			}
+#ifndef BDDPRE4
 			else if (hud_cursor == HUD_SBARSTYLE)
 			{
 				int value = scr_sbar.value + 1;
-#ifdef BDDPRE4
-				if (value > 4) value = 1;
-#else
 				if (value > 3) value = 1;
-#endif
 				Cvar_SetValue("scr_sbar", value);
 			}
+#endif
 			else if (hud_cursor == HUD_SHOWFPS)
 			{
 				Cvar_SetValue("scr_showfps", !scr_showfps.value);
@@ -8667,7 +8663,9 @@ void M_HUD_Mousemove(int cx, int cy)
 			Cvar_SetValue("scr_conscale", f);
 			break;
 
+#ifndef BDDPRE4
 		case HUD_SBARSTYLE:
+#endif
 		case HUD_SHOWFPS:
 		case HUD_MATCHSCORES:
 		case HUD_MATCHCLOCK:

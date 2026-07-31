@@ -84,5 +84,14 @@ void Draw_PicPolygon(qpic_t *pic, unsigned int numverts, polygonvert_t *verts);
 
 void GL_SetCanvas (canvastype newcanvas); //johnfitz
 
+float GL_HudScaleSA (void);
+void GL_SetCanvasSA (void);
+void GL_SetCanvasSATopLeft (void);
+void GL_SetCanvasSABottom (void);
+void GL_SetCanvasSABottomCenter (void);
+void GL_SetCanvasSABottomLeft (void);
+void GL_SetCanvasSABottomRight (void);
+void GL_EndCanvasSA (void);
+
 #endif	/* _QUAKE_DRAW_H */
 

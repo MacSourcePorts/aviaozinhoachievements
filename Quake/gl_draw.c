@@ -1218,6 +1218,94 @@ void Draw_GetMenuTransform(vrect_t* bounds, vrect_t* viewport)
 
 float canvas_scaling; // woods #autoid
 
+float GL_HudScaleSA (void)
+{
+	return scr_sbarscale.value / 3.2f;
+}
+
+void GL_SetCanvasSA (void)
+{
+	float scale = GL_HudScaleSA();
+
+	GL_SetCanvas(CANVAS_SA);
+
+	glPushMatrix();
+	glLoadIdentity();
+	glTranslatef(320.0f, 4.0f, 0.0f);
+	glScalef(scale, scale, 1.0f);
+	glTranslatef(-320.0f, -4.0f, 0.0f);
+}
+
+void GL_SetCanvasSATopLeft (void)
+{
+	float scale = GL_HudScaleSA();
+
+	GL_SetCanvas(CANVAS_SA);
+
+	glPushMatrix();
+	glLoadIdentity();
+	glTranslatef(0.0f, 4.0f, 0.0f);
+	glScalef(scale, scale, 1.0f);
+	glTranslatef(0.0f, -4.0f, 0.0f);
+}
+
+void GL_SetCanvasSABottom (void)
+{
+	float scale = GL_HudScaleSA();
+
+	GL_SetCanvas(CANVAS_SA_BOTTOM);
+
+	glPushMatrix();
+	glLoadIdentity();
+	glTranslatef(160.0f, 200.0f, 0.0f);
+	glScalef(scale, scale, 1.0f);
+	glTranslatef(-160.0f, -200.0f, 0.0f);
+}
+
+void GL_SetCanvasSABottomCenter (void)
+{
+	float scale = GL_HudScaleSA();
+
+	GL_SetCanvas(CANVAS_SA);
+
+	glPushMatrix();
+	glLoadIdentity();
+	glTranslatef(160.0f, 200.0f, 0.0f);
+	glScalef(scale, scale, 1.0f);
+	glTranslatef(-160.0f, -200.0f, 0.0f);
+}
+
+void GL_SetCanvasSABottomLeft (void)
+{
+	float scale = GL_HudScaleSA();
+
+	GL_SetCanvas(CANVAS_SA);
+
+	glPushMatrix();
+	glLoadIdentity();
+	glTranslatef(0.0f, 200.0f, 0.0f);
+	glScalef(scale, scale, 1.0f);
+	glTranslatef(0.0f, -200.0f, 0.0f);
+}
+
+void GL_SetCanvasSABottomRight (void)
+{
+	float scale = GL_HudScaleSA();
+
+	GL_SetCanvas(CANVAS_SA);
+
+	glPushMatrix();
+	glLoadIdentity();
+	glTranslatef(320.0f, 200.0f, 0.0f);
+	glScalef(scale, scale, 1.0f);
+	glTranslatef(-320.0f, -200.0f, 0.0f);
+}
+
+void GL_EndCanvasSA (void)
+{
+	glPopMatrix();
+}
+
 /*
 ================
 GL_SetCanvas -- johnfitz -- support various canvas types

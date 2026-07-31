@@ -714,6 +714,110 @@ void Sbar_SoloScoreboard(void)
 		Sbar_DrawString(160 - len * 4, 4, str);
 }
 
+void Sbar_SoloScoreboardSABottom(void)
+{
+	char	str[256];
+	int minutes, seconds, tens, units;
+	int	min, smin, cmin, ticks;
+	int	len, ct, pl, st, mpc;
+
+	if (cl.gametype != GAME_DEATHMATCH)
+	{
+		qpic_t* border = Draw_CachePic("gfx/weapon_border");
+
+		sprintf(str, LOC_GetString("$sbar_kills"), cl.stats[STAT_MONSTERS], cl.stats[STAT_TOTALMONSTERS]);
+		GL_SetCanvasSABottomLeft();
+		glTranslatef(0.0f, 200.0f - 48.0f, 0.0f);
+		Sbar_DrawString(4, 12, str);
+		GL_EndCanvasSA();
+
+		sprintf(str, LOC_GetString("$sbar_secrets"), cl.stats[STAT_SECRETS], cl.stats[STAT_TOTALSECRETS]);
+		GL_SetCanvasSABottomRight();
+		glTranslatef(0.0f, 200.0f - 48.0f, 0.0f);
+		Sbar_DrawString(280 + border->width - strlen(str) * 8, 12, str);
+		GL_EndCanvasSA();
+	}
+	else
+	{
+		ticks = SDL_GetTicks();
+		ct = ticks - maptime;
+		st = ticks - mpservertime;
+		mpc = ticks / 1000;
+		pl = cl.pltotal;
+
+		min = ct / 60000;
+		smin = st / 60000;
+		cmin = mpc / 60;
+
+		sprintf(str, LOC_GetString("$sbar_time_info"), min, smin, cmin, pl);
+
+		len = strlen(str);
+		GL_SetCanvasSABottomCenter();
+		glTranslatef(0.0f, 200.0f - 48.0f, 0.0f);
+		if (len > 40)
+			Sbar_DrawScrollString(0, 12, 320, str);
+		else
+			M_Print(160 - len * 4, 37, str);
+		GL_EndCanvasSA();
+	}
+
+	if (!fitzmode)
+	{
+		if (cl.gametype != GAME_DEATHMATCH)
+		{
+			q_snprintf(str, sizeof(str), LOC_GetString("$sbar_skill"), (int)(skill.value + 0.5));
+			GL_SetCanvasSABottomCenter();
+			glTranslatef(0.0f, 200.0f - 48.0f, 0.0f);
+			Sbar_DrawString(160 - strlen(str) * 4, 12, str);
+			GL_EndCanvasSA();
+		}
+
+		if (cl.maxclients > 1)
+		{
+			char qfylwdot[2] = { 133, '\0' };
+
+			if (cl.levelname[0])
+				q_snprintf(str, sizeof(str), LOC_GetString("$sbar_mp_level_host_named"), cl.levelname, cl.mapname, qfylwdot, lastmphost);
+			else
+				q_snprintf(str, sizeof(str), LOC_GetString("$sbar_mp_level_host"), cl.mapname, qfylwdot, lastmphost);
+		}
+		else
+		{
+			if (cl.levelname[0])
+				q_snprintf(str, sizeof(str), LOC_GetString("$sbar_sp_level_named"), cl.levelname, cl.mapname);
+			else
+				q_snprintf(str, sizeof(str), LOC_GetString("$sbar_sp_level"), cl.mapname);
+		}
+
+		len = strlen(str);
+		GL_SetCanvasSABottomCenter();
+		glTranslatef(0.0f, 200.0f - 48.0f, 0.0f);
+		if (len > 40)
+			Sbar_DrawScrollString(0, 4, 320, str);
+		else
+			Sbar_DrawString(160 - len * 4, 4, str);
+		GL_EndCanvasSA();
+		return;
+	}
+
+	minutes = cl.time / 60;
+	seconds = cl.time - 60 * minutes;
+	tens = seconds / 10;
+	units = seconds - 10 * tens;
+	sprintf(str, "%i:%i%i", minutes, tens, units);
+
+	GL_SetCanvasSABottomCenter();
+	glTranslatef(0.0f, 200.0f - 48.0f, 0.0f);
+	Sbar_DrawString(160 - strlen(str) * 4, 12, str);
+
+	len = q_strlcpy(str, cl.levelname[0] ? cl.levelname : cl.mapname, sizeof(str));
+	if (len > 40)
+		Sbar_DrawScrollString(0, 4, 320, str);
+	else
+		Sbar_DrawString(160 - len * 4, 4, str);
+	GL_EndCanvasSA();
+}
+
 
 /*
 ===============
@@ -2336,16 +2440,8 @@ void Sbar_Draw(void)
 
 	if (clampedSbar == 4) {
 
-		float scale = scr_sbarscale.value;
-		scale /= 3.2f;
-
-		GL_SetCanvas(CANVAS_SA);
-		glPushMatrix();
+		GL_SetCanvasSA();
 		{
-			glTranslatef(320.0f, 4.0f, 0.0f);
-			glScalef(scale, scale, 1.0f);
-			glTranslatef(-320.0f, -4.0f, 0.0f);
-
 			Sbar_DrawInventorySA();
 			Sbar_SoloScoreboardSA();
 			glPushMatrix();
@@ -2356,21 +2452,14 @@ void Sbar_Draw(void)
 			}
 			glPopMatrix();
 		}
-		glPopMatrix();
+		GL_EndCanvasSA();
 
-		GL_SetCanvas(CANVAS_SA_BOTTOM);
-		glPushMatrix();
+		if (sb_showscores)
+			Sbar_SoloScoreboardSABottom();
+
+		GL_SetCanvasSABottom();
 		{
-			glTranslatef(160.0f, 200.0f, 0.0f);
-			glScalef(scale, scale, 1.0f);
-			glTranslatef(-160.0f, -200.0f, 0.0f);
-
 			glTranslatef(0.0f, 200.0f - 48.0f, 0.0f);
-
-			if (sb_showscores)
-			{
-				Sbar_SoloScoreboard();
-			}
 
 			//if (cl.gametype == GAME_DEATHMATCH)
 			//	Sbar_MiniDeathmatchOverlay();
@@ -2378,7 +2467,7 @@ void Sbar_Draw(void)
 			if (cls.demorecording)
 				Sbar_DrawRecord();
 		}
-		glPopMatrix();
+		GL_EndCanvasSA();
 
 		if (sb_showscores)
 		{
@@ -3226,6 +3315,7 @@ Sbar_FinaleOverlay
 
 #define CREDITS_FIRST_MAP "start"
 #define CREDITS_CHANGELEVEL_DELAY 1.0
+#define CREDITS_SKIP_DELAY 3.0
 
 char* intermissionText = NULL;
 double intermissionTime = 0.0;
@@ -3247,6 +3337,9 @@ void Sbar_FinaleReset(void)
 qboolean Sbar_FinaleSkip(void)
 {
 	if (cl.intermission != 2 || cls.state != ca_connected || cls.demoplayback)
+		return false;
+
+	if (intermissionTime <= 0.0 || cl.time - intermissionTime < CREDITS_SKIP_DELAY)
 		return false;
 
 	if (!creditsChangedLevel)
@@ -3296,7 +3389,8 @@ void Sbar_FinaleOverlay(void)
 {
 	if (!intermissionText)
 	{
-		intermissionTime = cl.time;
+		if (intermissionTime <= 0.0)
+			intermissionTime = cl.time;
 
 		char filename[MAX_OSPATH];
 		q_snprintf(filename, sizeof(filename), "%s/bddpre4/credits.txt", com_basedir);
