@@ -2644,7 +2644,10 @@ static void Host_FinaleRestart_f(void)
 		return;
 
 	if (!Host_IntermissionRunning())
+	{
+		Con_DPrintf("finalerestart: no intermission running on the server\n");
 		return;
+	}
 
 	sv.finalerestarting = true;
 

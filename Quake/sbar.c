@@ -3315,11 +3315,12 @@ Sbar_FinaleOverlay
 
 #define CREDITS_CHANGELEVEL_DELAY 1.0
 #define CREDITS_SKIP_DELAY 3.0
+#define CREDITS_RESTART_RETRY 2.0
 
 char* intermissionText = NULL;
 double intermissionTime = 0.0;
 static double creditsScrollEndTime = 0.0;
-static qboolean creditsChangedLevel = false;
+static double creditsRestartTime = 0.0;
 
 void Sbar_FinaleReset(void)
 {
@@ -3330,7 +3331,7 @@ void Sbar_FinaleReset(void)
 	}
 	intermissionTime = 0.0;
 	creditsScrollEndTime = 0.0;
-	creditsChangedLevel = false;
+	creditsRestartTime = 0.0;
 }
 
 void Sbar_FinaleStart(void)
@@ -3341,13 +3342,13 @@ void Sbar_FinaleStart(void)
 
 static void Sbar_FinaleRequestRestart(void)
 {
-	if (creditsChangedLevel)
-		return;
-
-	creditsChangedLevel = true;
-
 	if (cls.demoplayback)
 		return;
+
+	if (creditsRestartTime > 0.0 && cl.time - creditsRestartTime < CREDITS_RESTART_RETRY)
+		return;
+
+	creditsRestartTime = cl.time;
 
 	Cbuf_AddText("finalerestart\n");
 }
@@ -3674,8 +3675,7 @@ void Sbar_FinaleOverlay(void)
 			{
 				creditsScrollEndTime = cl.time;
 			}
-			else if (!creditsChangedLevel &&
-				cl.time - creditsScrollEndTime >= CREDITS_CHANGELEVEL_DELAY)
+			else if (cl.time - creditsScrollEndTime >= CREDITS_CHANGELEVEL_DELAY)
 			{
 				Sbar_FinaleRequestRestart();
 			}
