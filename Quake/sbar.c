@@ -3321,6 +3321,7 @@ char* intermissionText = NULL;
 double intermissionTime = 0.0;
 static double creditsScrollEndTime = 0.0;
 static double creditsRestartTime = 0.0;
+static qboolean creditsLoadFailed = false;
 
 void Sbar_FinaleReset(void)
 {
@@ -3332,6 +3333,7 @@ void Sbar_FinaleReset(void)
 	intermissionTime = 0.0;
 	creditsScrollEndTime = 0.0;
 	creditsRestartTime = 0.0;
+	creditsLoadFailed = false;
 }
 
 void Sbar_FinaleStart(void)
@@ -3407,36 +3409,31 @@ void Sbar_FinaleOverlay(void)
 		if (intermissionTime <= 0.0)
 			intermissionTime = cl.time;
 
-		char filename[MAX_OSPATH];
-		q_snprintf(filename, sizeof(filename), "%s/bddpre4/credits.txt", com_basedir);
-
-		FILE* file = fopen(filename, "rb");
-		if (!file)
-		{
+		if (creditsLoadFailed)
 			return;
-		}
 
-		fseek(file, 0, SEEK_END);
-		long fileSize = ftell(file);
-		fseek(file, 0, SEEK_SET);
+		intermissionText = (char*)COM_LoadMallocFile("credits.txt", NULL);
 
-		if (fileSize <= 0)
-		{
-			fclose(file);
-			return;
-		}
-
-		intermissionText = malloc((size_t)fileSize + 1);
 		if (!intermissionText)
 		{
-			fclose(file);
-			return;
+			char filename[MAX_OSPATH];
+
+			q_snprintf(filename, sizeof(filename), "%s/bddpre4/credits.txt", com_basedir);
+			intermissionText = (char*)COM_LoadMallocFile_TextMode_OSPath(filename, NULL);
 		}
 
-		size_t bytesRead = fread(intermissionText, 1, (size_t)fileSize, file);
-		fclose(file);
+		if (intermissionText && !*intermissionText)
+		{
+			free(intermissionText);
+			intermissionText = NULL;
+		}
 
-		intermissionText[bytesRead] = '\0';
+		if (!intermissionText)
+		{
+			creditsLoadFailed = true;
+			Con_Warning("finale: could not load credits.txt from %s\n", com_gamedir);
+			return;
+		}
 	}
 
 	const double animSpeed = 5.0;
