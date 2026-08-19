@@ -3313,7 +3313,6 @@ Sbar_FinaleOverlay
 */
 #ifdef BDDPRE4
 
-#define CREDITS_FIRST_MAP "start"
 #define CREDITS_CHANGELEVEL_DELAY 1.0
 #define CREDITS_SKIP_DELAY 3.0
 
@@ -3334,6 +3333,25 @@ void Sbar_FinaleReset(void)
 	creditsChangedLevel = false;
 }
 
+void Sbar_FinaleStart(void)
+{
+	Sbar_FinaleReset();
+	intermissionTime = cl.time;
+}
+
+static void Sbar_FinaleRequestRestart(void)
+{
+	if (creditsChangedLevel)
+		return;
+
+	creditsChangedLevel = true;
+
+	if (cls.demoplayback)
+		return;
+
+	Cbuf_AddText("finalerestart\n");
+}
+
 qboolean Sbar_FinaleSkip(void)
 {
 	if (cl.intermission != 2 || cls.state != ca_connected || cls.demoplayback)
@@ -3342,11 +3360,7 @@ qboolean Sbar_FinaleSkip(void)
 	if (intermissionTime <= 0.0 || cl.time - intermissionTime < CREDITS_SKIP_DELAY)
 		return false;
 
-	if (!creditsChangedLevel)
-	{
-		creditsChangedLevel = true;
-		Cbuf_AddText("changelevel " CREDITS_FIRST_MAP "\n");
-	}
+	Sbar_FinaleRequestRestart();
 
 	return true;
 }
@@ -3663,8 +3677,7 @@ void Sbar_FinaleOverlay(void)
 			else if (!creditsChangedLevel &&
 				cl.time - creditsScrollEndTime >= CREDITS_CHANGELEVEL_DELAY)
 			{
-				creditsChangedLevel = true;
-				Cbuf_AddText("changelevel " CREDITS_FIRST_MAP "\n");
+				Sbar_FinaleRequestRestart();
 			}
 		}
 

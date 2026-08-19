@@ -43,7 +43,9 @@ void Sbar_IntermissionOverlay (void);
 void Sbar_FinaleOverlay (void);
 
 #ifdef BDDPRE4
+#define CREDITS_FIRST_MAP "start"
 void Sbar_FinaleReset (void);
+void Sbar_FinaleStart (void);
 qboolean Sbar_FinaleSkip (void);
 #endif
 

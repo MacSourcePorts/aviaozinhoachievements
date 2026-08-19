@@ -2617,6 +2617,41 @@ static void Host_Changelevel_f(void)
 		Host_Error("cannot run map %s", level);
 }
 
+#ifdef BDDPRE4
+static qboolean Host_IntermissionRunning(void)
+{
+	ddef_t	*def;
+
+	def = ED_FindGlobal("intermission_running");
+	if (!def || (def->type & ~DEF_SAVEGLOBAL) != ev_float || def->ofs >= qcvm->progs->numglobals)
+	{
+		Con_DWarning("finalerestart: progs.dat has no float intermission_running\n");
+		return false;
+	}
+
+	return ((eval_t *)(qcvm->globals + def->ofs))->_float != 0;
+}
+
+static void Host_FinaleRestart_f(void)
+{
+	if (cmd_source != src_client)
+	{
+		Cmd_ForwardToServer();
+		return;
+	}
+
+	if (!sv.active || sv.finalerestarting)
+		return;
+
+	if (!Host_IntermissionRunning())
+		return;
+
+	sv.finalerestarting = true;
+
+	Cbuf_AddText("changelevel " CREDITS_FIRST_MAP "\n");
+}
+#endif
+
 /*
 ==================
 Host_Restart_f
@@ -5264,6 +5299,9 @@ void Host_InitCommands(void)
 	Cmd_AddCommand("map", Host_Map_f);
 	Cmd_AddCommand("restart", Host_Restart_f);
 	Cmd_AddCommand("changelevel", Host_Changelevel_f);
+#ifdef BDDPRE4
+	Cmd_AddCommand_ClientCommand("finalerestart", Host_FinaleRestart_f);
+#endif
 	Cmd_AddCommand("connect", Host_Connect_f);
 	Cmd_AddCommand_Console("reconnect", Host_Reconnect_Con_f);
 	Cmd_AddCommand_ServerCommand("reconnect", Host_Reconnect_Sv_f);
