@@ -3313,14 +3313,15 @@ Sbar_FinaleOverlay
 */
 #ifdef BDDPRE4
 
-#define CREDITS_FIRST_MAP "start"
 #define CREDITS_CHANGELEVEL_DELAY 1.0
 #define CREDITS_SKIP_DELAY 3.0
+#define CREDITS_RESTART_RETRY 2.0
 
 char* intermissionText = NULL;
 double intermissionTime = 0.0;
 static double creditsScrollEndTime = 0.0;
-static qboolean creditsChangedLevel = false;
+static double creditsRestartTime = 0.0;
+static qboolean creditsLoadFailed = false;
 
 void Sbar_FinaleReset(void)
 {
@@ -3331,7 +3332,27 @@ void Sbar_FinaleReset(void)
 	}
 	intermissionTime = 0.0;
 	creditsScrollEndTime = 0.0;
-	creditsChangedLevel = false;
+	creditsRestartTime = 0.0;
+	creditsLoadFailed = false;
+}
+
+void Sbar_FinaleStart(void)
+{
+	Sbar_FinaleReset();
+	intermissionTime = cl.time;
+}
+
+static void Sbar_FinaleRequestRestart(void)
+{
+	if (cls.demoplayback)
+		return;
+
+	if (creditsRestartTime > 0.0 && cl.time - creditsRestartTime < CREDITS_RESTART_RETRY)
+		return;
+
+	creditsRestartTime = cl.time;
+
+	Cbuf_AddText("finalerestart\n");
 }
 
 qboolean Sbar_FinaleSkip(void)
@@ -3342,11 +3363,7 @@ qboolean Sbar_FinaleSkip(void)
 	if (intermissionTime <= 0.0 || cl.time - intermissionTime < CREDITS_SKIP_DELAY)
 		return false;
 
-	if (!creditsChangedLevel)
-	{
-		creditsChangedLevel = true;
-		Cbuf_AddText("changelevel " CREDITS_FIRST_MAP "\n");
-	}
+	Sbar_FinaleRequestRestart();
 
 	return true;
 }
@@ -3392,36 +3409,31 @@ void Sbar_FinaleOverlay(void)
 		if (intermissionTime <= 0.0)
 			intermissionTime = cl.time;
 
-		char filename[MAX_OSPATH];
-		q_snprintf(filename, sizeof(filename), "%s/bddpre4/credits.txt", com_basedir);
-
-		FILE* file = fopen(filename, "rb");
-		if (!file)
-		{
+		if (creditsLoadFailed)
 			return;
-		}
 
-		fseek(file, 0, SEEK_END);
-		long fileSize = ftell(file);
-		fseek(file, 0, SEEK_SET);
+		intermissionText = (char*)COM_LoadMallocFile("credits.txt", NULL);
 
-		if (fileSize <= 0)
-		{
-			fclose(file);
-			return;
-		}
-
-		intermissionText = malloc((size_t)fileSize + 1);
 		if (!intermissionText)
 		{
-			fclose(file);
-			return;
+			char filename[MAX_OSPATH];
+
+			q_snprintf(filename, sizeof(filename), "%s/bddpre4/credits.txt", com_basedir);
+			intermissionText = (char*)COM_LoadMallocFile_TextMode_OSPath(filename, NULL);
 		}
 
-		size_t bytesRead = fread(intermissionText, 1, (size_t)fileSize, file);
-		fclose(file);
+		if (intermissionText && !*intermissionText)
+		{
+			free(intermissionText);
+			intermissionText = NULL;
+		}
 
-		intermissionText[bytesRead] = '\0';
+		if (!intermissionText)
+		{
+			creditsLoadFailed = true;
+			Con_Warning("finale: could not load credits.txt from %s\n", com_gamedir);
+			return;
+		}
 	}
 
 	const double animSpeed = 5.0;
@@ -3660,11 +3672,9 @@ void Sbar_FinaleOverlay(void)
 			{
 				creditsScrollEndTime = cl.time;
 			}
-			else if (!creditsChangedLevel &&
-				cl.time - creditsScrollEndTime >= CREDITS_CHANGELEVEL_DELAY)
+			else if (cl.time - creditsScrollEndTime >= CREDITS_CHANGELEVEL_DELAY)
 			{
-				creditsChangedLevel = true;
-				Cbuf_AddText("changelevel " CREDITS_FIRST_MAP "\n");
+				Sbar_FinaleRequestRestart();
 			}
 		}
 

@@ -4080,7 +4080,7 @@ void CL_ParseServerMessage (void)
 		case svc_finale:
 #ifdef BDDPRE4
 			if (cl.intermission != 2)
-				Sbar_FinaleReset ();
+				Sbar_FinaleStart ();
 #endif
 			cl.intermission = 2;
 			cl.completed_time = cl.time;

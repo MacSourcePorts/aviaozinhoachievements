@@ -106,6 +106,10 @@ typedef struct
 
 	qboolean skyroom_pos_known;
 	vec4_t skyroom_pos;
+
+#ifdef BDDPRE4
+	qboolean	finalerestarting;
+#endif
 } server_t;
 
 
