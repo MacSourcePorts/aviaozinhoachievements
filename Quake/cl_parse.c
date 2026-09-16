@@ -3771,6 +3771,12 @@ qboolean WordFilter_Check(const char* text, char* dest_buffer, size_t buffer_siz
 CL_ParseServerMessage
 =====================
 */
+char modal_message[MAX_PATH];
+char modal_yes[MAX_PATH];
+char modal_no[MAX_PATH];
+
+extern void Host_CustomModal(void);
+
 void CL_ParseServerMessage (void)
 {
 	int			cmd;
@@ -4289,8 +4295,18 @@ void CL_ParseServerMessage (void)
 				Host_Error ("Received svcfte_voicechat but extension not active");
 			S_Voip_Parse();
 			break;
+			case svc_modal: 
+			{
+				str = MSG_ReadString();
+				q_strlcpy(modal_message, str, MAX_PATH);
+				str = MSG_ReadString();
+				q_strlcpy(modal_yes, str, MAX_PATH);
+				str = MSG_ReadString();
+				q_strlcpy(modal_no, str, MAX_PATH);
+				Host_CustomModal();
+				break;
+			}
 		}
-
 		lastcmd = cmd; //johnfitz
 	}
 }

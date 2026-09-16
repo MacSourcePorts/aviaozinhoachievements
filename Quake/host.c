@@ -82,7 +82,7 @@ cvar_t	samelevel = {"samelevel","0",CVAR_SERVERINFO};
 cvar_t	noexit = {"noexit","0",CVAR_NOTIFY|CVAR_SERVERINFO};
 cvar_t	skill = {"skill","1",CVAR_SERVERINFO};			// 0 - 3
 cvar_t	deathmatch = {"deathmatch","0",CVAR_SERVERINFO};	// 0, 1, or 2
-cvar_t	coop = {"coop","1",CVAR_SERVERINFO};			// 0 or 1
+cvar_t	coop = {"coop","0",CVAR_SERVERINFO};			// 0 or 1
 
 cvar_t	pausable = {"pausable","1",CVAR_NONE};
 
@@ -1435,6 +1435,34 @@ static void CL_LoadCSProgs(void)
 	PR_SwitchQCVM(NULL);
 }
 
+static void Host_ShowStartupAlert (void)
+{
+	static qboolean shown = false;
+	const char *alert;
+	const char *ok;
+	char text[1024];
+
+	if (shown)
+		return;
+
+	shown = true;
+
+	if (cls.state == ca_dedicated || isDedicated)
+		return;
+
+	alert = LOC_GetRawString ("$alert");
+	if (!alert || !*alert)
+		return;
+
+	ok = LOC_GetRawString ("$menu_ok");
+	if (!ok || !*ok)
+		ok = "OK";
+
+	q_snprintf (text, sizeof(text), "%s\n\n[ %s ]\n", alert, ok);
+
+	SCR_ModalAlert (text);
+}
+
 /*
 ==================
 Host_Frame
@@ -1586,6 +1614,10 @@ void _Host_Frame (double time)
 		Con_Printf ("%3i tot %3i server %3i gfx %3i snd\n",
 					pass1+pass2+pass3, pass1, pass2, pass3);
 	}
+
+#ifdef BDD4_WARNING
+	Host_ShowStartupAlert ();
+#endif
 
 	host_framecount++;
 

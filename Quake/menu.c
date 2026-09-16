@@ -280,6 +280,10 @@ void M_GameOver_Key(int key);
 void M_GameOver_Mousemove(int x, int y);
 void M_GameOver_GoBack(void);
 
+void M_Modal_Draw(void);
+void M_Modal_Key(int key);
+void M_Modal_Mousemove(int cx, int cy);
+
 // ===== Controller =====
 void M_Menu_Controller_f(void);
 void M_Controller_Draw(void);
@@ -302,7 +306,7 @@ void     M_Language_Mousemove(int cx, int cy);
 
 int gameover_cursor;
 
-// avião
+// aviï¿½o
 qboolean m_skill_from_newgame;
 
 //gltexture_t* lore_textures[256];
@@ -347,10 +351,11 @@ void M_DrawArrowCursor(int cx, int cy) // woods #skillmenu (iw)
 
 void M_PrintColor(int cx, int cy, const char* str)
 {
-	size_t len = strlen(str);
+	size_t bytes = strlen(str);
+	size_t len = utf8_strlen(str, bytes);
 	for (int i = 0; i < len; i++)
 	{
-		Uint32 codepoint = utf8_decode_nth(str, i, len);
+		Uint32 codepoint = utf8_decode_nth(str, i, bytes);
 		plcolour_t color;
 		color.type = 2;
 		color.basic = 0;
@@ -364,10 +369,11 @@ void M_PrintColor(int cx, int cy, const char* str)
 
 void M_Print(int cx, int cy, const char* str)
 {
-	size_t len = strlen(str);
+	size_t bytes = strlen(str);
+	size_t len = utf8_strlen(str, bytes);
 	for (int i = 0; i < len; i++)
 	{
-		Uint32 codepoint = utf8_decode_nth(str, i, len);
+		Uint32 codepoint = utf8_decode_nth(str, i, bytes);
 		plcolour_t color;
 		color.type = 2;
 		color.basic = 0;
@@ -382,13 +388,14 @@ void M_Print(int cx, int cy, const char* str)
 void M_PrintWithLimit(int cx, int cy, const char* str, int max_len)
 {
 	int start_cx = cx;
-	size_t len = strlen(str);
+	size_t bytes = strlen(str);
+	size_t len = utf8_strlen(str, bytes);
 	for (int i = 0; i < len; i++)
 	{
 		if (max_len > 0 && i > max_len) {
 			break;
 		}
-		Uint32 codepoint = utf8_decode_nth(str, i, len);
+		Uint32 codepoint = utf8_decode_nth(str, i, bytes);
 		M_DrawCharacter(cx, cy, codepoint);
 		cx += 8;
 	}
@@ -398,20 +405,21 @@ void M_PrintWithBreak(int cx, int cy, const char* str, int max_len, int line_len
 {
 	int start_cx = cx;
 	int line_chars = 0;
-	size_t len = strlen(str);
+	size_t bytes = strlen(str);
+	size_t len = utf8_strlen(str, bytes);
 	for (int i = 0; i < len; i++)
 	{
 		if (max_len > 0 && i > max_len) {
 			break;
 		}
-		Uint32 codepoint = utf8_decode_nth(str, i, len);
+		Uint32 codepoint = utf8_decode_nth(str, i, bytes);
 		if (codepoint == 13) {
 			continue;
 		}
 		else if (codepoint == '\n') {
 			cy += 8;
 			cx = start_cx;
-			if (utf8_decode_nth(str, i + 1, len) == ' ') {
+			if (utf8_decode_nth(str, i + 1, bytes) == ' ') {
 				i++;
 			}
 			line_chars = 0;
@@ -419,7 +427,7 @@ void M_PrintWithBreak(int cx, int cy, const char* str, int max_len, int line_len
 		else if (line_len > 0 && line_chars >= line_len) {
 			cy += 8;
 			cx = start_cx;
-			if (utf8_decode_nth(str, i + 1, len) == ' ') {
+			if (utf8_decode_nth(str, i + 1, bytes) == ' ') {
 				i++;
 			}
 			M_DrawCharacter(cx, cy, codepoint);
@@ -441,10 +449,11 @@ void M_DrawCharacterRGBA(int cx, int line, Uint32 num, plcolour_t c, float alpha
 void M_PrintRGBA(int cx, int cy, const char* str, plcolour_t c, float alpha, qboolean mask) // woods
 {
 
-	size_t len = strlen(str);
+	size_t bytes = strlen(str);
+	size_t len = utf8_strlen(str, bytes);
 	for (int i = 0; i < len; i++)
 	{
-		Uint32 codepoint = utf8_decode_nth(str, i, len);
+		Uint32 codepoint = utf8_decode_nth(str, i, bytes);
 		M_DrawCharacter(cx, cy, codepoint);
 		cx += 8;
 	}
@@ -453,10 +462,11 @@ void M_PrintRGBA(int cx, int cy, const char* str, plcolour_t c, float alpha, qbo
 void M_Print2(int cx, int cy, const char* str) // woods #speed yellow/gold numbers
 {
 
-	size_t len = strlen(str);
+	size_t bytes = strlen(str);
+	size_t len = utf8_strlen(str, bytes);
 	for (int i = 0; i < len; i++)
 	{
-		Uint32 codepoint = utf8_decode_nth(str, i, len);
+		Uint32 codepoint = utf8_decode_nth(str, i, bytes);
 		M_DrawCharacter(cx, cy, codepoint);
 		cx += 8;
 	}
@@ -464,10 +474,11 @@ void M_Print2(int cx, int cy, const char* str) // woods #speed yellow/gold numbe
 
 void M_PrintWhite(int cx, int cy, const char* str)
 {
-	size_t len = strlen(str);
+	size_t bytes = strlen(str);
+	size_t len = utf8_strlen(str, bytes);
 	for (int i = 0; i < len; i++)
 	{
-		Uint32 codepoint = utf8_decode_nth(str, i, len);
+		Uint32 codepoint = utf8_decode_nth(str, i, bytes);
 		M_DrawCharacter(cx, cy, codepoint);
 		cx += 8;
 	}
@@ -703,24 +714,30 @@ void M_PrintHighlight(int x, int y, const char* str, const char* search, int sea
 		return;
 	}
 
-	int pos = match - str;
+	size_t prefix_bytes = (size_t)(match - str);
+	size_t match_bytes = (size_t)searchlen;
+	size_t tail_bytes = strlen(match + match_bytes);
+	int pos = (int)utf8_strlen(str, prefix_bytes);
+	int matchchars = (int)utf8_strlen(match, match_bytes);
+	int tailchars = (int)utf8_strlen(match + match_bytes, tail_bytes);
 	int i;
+
 	for (i = 0; i < pos; i++)
 	{
-		Uint32 codepoint = utf8_decode_nth(str, i, pos);
+		Uint32 codepoint = utf8_decode_nth(str, i, prefix_bytes);
 		M_DrawCharacter(x + i * 8, y, codepoint /*^ 128*/);
 	}
 
-	for (i = 0; i < searchlen && match[i]; i++)
+	for (i = 0; i < matchchars; i++)
 	{
-		Uint32 codepoint = utf8_decode_nth(match, i, strlen(match));
+		Uint32 codepoint = utf8_decode_nth(match, i, match_bytes);
 		M_DrawCharacter(x + (pos + i) * 8, y, codepoint);
 	}
 
-	for (i = 0; match[i + searchlen]; i++)
+	for (i = 0; i < tailchars; i++)
 	{
-		Uint32 codepoint = utf8_decode_nth(match, i + searchlen, 256); //todo: 256?
-		M_DrawCharacter(x + (pos + searchlen + i) * 8, y, codepoint /*^ 128*/);
+		Uint32 codepoint = utf8_decode_nth(match + match_bytes, i, tail_bytes);
+		M_DrawCharacter(x + (pos + matchchars + i) * 8, y, codepoint /*^ 128*/);
 	}
 }
 
@@ -729,9 +746,9 @@ void M_PrintScroll(int x, int y, int maxwidth, const char* str, double time, qbo
 {
 
 	int maxchars = maxwidth / 8;
-	int len = strlen(str);
+	size_t bytes = strlen(str);
+	int len = (int)utf8_strlen(str, bytes);
 	int i, ofs;
-	char mask = /*color ? 128 : */0;
 
 	if (len <= maxchars)
 	{
@@ -749,8 +766,8 @@ void M_PrintScroll(int x, int y, int maxwidth, const char* str, double time, qbo
 
 	for (i = 0; i < maxchars; i++)
 	{
-		char c = (ofs < len) ? str[ofs] : " /// "[ofs - len];
-		M_DrawCharacter(x, y, c ^ mask);
+		Uint32 c = (ofs < len) ? utf8_decode_nth(str, ofs, bytes) : (Uint32)(unsigned char)" /// "[ofs - len];
+		M_DrawCharacter(x, y, c);
 		x += 8;
 		if (++ofs >= len + 5)
 			ofs = 0;
@@ -761,16 +778,20 @@ void M_PrintScroll2(int x, int y, int maxwidth, const char* str, const char* str
 {
 
 	int maxchars = maxwidth / 8;
-	int len_str = (int)strlen(str);
+	size_t str_bytes = strlen(str);
+	int len_str = (int)utf8_strlen(str, str_bytes);
 
 	int effective_len_str = (time != 0.0) ? len_str : q_min(len_str, 12);
 
 	char masked_str[MAX_QPATH];
-	for (int i = 0; i < effective_len_str; i++)
-		masked_str[i] = (char)(str[i] /*^ 128*/);
-	masked_str[effective_len_str] = '\0';
+	size_t masked_bytes = utf8_byte_offset(str, (size_t)effective_len_str, str_bytes);
+	if (masked_bytes >= sizeof(masked_str))
+		masked_bytes = utf8_byte_offset(str, utf8_strlen(str, sizeof(masked_str) - 1), sizeof(masked_str) - 1);
+	memcpy(masked_str, str, masked_bytes);
+	masked_str[masked_bytes] = '\0';
 
 	int padding_width = q_min(max_word_length + 1, 13);
+	padding_width += (int)(masked_bytes - utf8_strlen(masked_str, masked_bytes));
 
 	char combined[MAX_CHAT_SIZE_EX];
 	if (time != 0.0 && len_str > 12)
@@ -778,7 +799,8 @@ void M_PrintScroll2(int x, int y, int maxwidth, const char* str, const char* str
 	else
 		q_snprintf(combined, sizeof(combined), "%-*s%s", padding_width, masked_str, str2);
 
-	int combined_len = (int)strlen(combined);
+	size_t combined_bytes = strlen(combined);
+	int combined_len = (int)utf8_strlen(combined, combined_bytes);
 
 	if (combined_len <= maxchars) {
 		M_PrintWhite(x, y, combined);
@@ -792,11 +814,11 @@ void M_PrintScroll2(int x, int y, int maxwidth, const char* str, const char* str
 		ofs += scroll_len;
 
 	for (int i = 0; i < maxchars; i++) {
-		char c;
+		Uint32 c;
 		if (ofs < combined_len)
-			c = combined[ofs];
+			c = utf8_decode_nth(combined, ofs, combined_bytes);
 		else
-			c = gap[ofs - combined_len];
+			c = (Uint32)(unsigned char)gap[ofs - combined_len];
 
 		M_DrawCharacter(x + (i * 8), y, c);
 		ofs = (ofs + 1) % scroll_len;
@@ -811,12 +833,13 @@ void M_PrintHighlightScroll2(int x, int y, int maxwidth,
 	int maxchars = maxwidth / 8;
 
 	char name_str[256];
-	int len_str = (int)strlen(str);
+	size_t str_bytes = strlen(str);
+	int len_str = (int)utf8_strlen(str, str_bytes);
 	int effective_len_str = (time != 0.0) ? len_str : (len_str > 12 ? 12 : len_str);
 
 	q_strlcpy(name_str, str, sizeof(name_str));
 	if (effective_len_str < len_str)
-		name_str[effective_len_str] = '\0';
+		name_str[utf8_byte_offset(name_str, (size_t)effective_len_str, strlen(name_str))] = '\0';
 
 	char name_portion[256];
 	if (time != 0.0 && len_str > 12)
@@ -825,22 +848,27 @@ void M_PrintHighlightScroll2(int x, int y, int maxwidth,
 		int padding_width = max_word_length + 1;
 		if (padding_width > 13)
 			padding_width = 13;
+		padding_width += (int)(strlen(name_str) - utf8_strlen(name_str, strlen(name_str)));
 		q_snprintf(name_portion, sizeof(name_portion), "%-*s", padding_width, name_str);
 	}
 
 	char combined[1024];
 	q_snprintf(combined, sizeof(combined), "%s%s", name_portion, str2);
 
-	int actual_name_len = (int)strlen(name_portion);
-	int combined_len = (int)strlen(combined);
+	size_t name_portion_bytes = strlen(name_portion);
+	size_t combined_bytes = strlen(combined);
+	size_t str2_bytes = strlen(str2);
+	int actual_name_len = (int)utf8_strlen(name_portion, name_portion_bytes);
+	int combined_len = (int)utf8_strlen(combined, combined_bytes);
+	int str2_len = (int)utf8_strlen(str2, str2_bytes);
 	int name_end = actual_name_len;
 
 	int name_highlight_start = -1, name_highlight_end = -1;
 	if (highlight && highlight[0]) {
 		const char* nm = q_strcasestr(name_str, highlight);
 		if (nm) {
-			name_highlight_start = (int)(nm - name_str);
-			name_highlight_end = name_highlight_start + (int)strlen(highlight);
+			name_highlight_start = (int)utf8_strlen(name_str, (size_t)(nm - name_str));
+			name_highlight_end = name_highlight_start + (int)utf8_strlen(highlight, strlen(highlight));
 			if (name_highlight_end > effective_len_str)
 				name_highlight_end = effective_len_str;
 		}
@@ -850,16 +878,16 @@ void M_PrintHighlightScroll2(int x, int y, int maxwidth,
 	if (highlight && highlight[0]) {
 		const char* dm = q_strcasestr(str2, highlight);
 		if (dm) {
-			desc_highlight_start = (int)(dm - str2);
-			desc_highlight_end = desc_highlight_start + (int)strlen(highlight);
-			if (desc_highlight_end > (int)strlen(str2))
-				desc_highlight_end = (int)strlen(str2);
+			desc_highlight_start = (int)utf8_strlen(str2, (size_t)(dm - str2));
+			desc_highlight_end = desc_highlight_start + (int)utf8_strlen(highlight, strlen(highlight));
+			if (desc_highlight_end > str2_len)
+				desc_highlight_end = str2_len;
 		}
 	}
 
 	if (combined_len <= maxchars) {
 		for (int i = 0; i < actual_name_len; i++) {
-			char ch = combined[i];
+			Uint32 ch = utf8_decode_nth(combined, i, combined_bytes);
 			qboolean is_highlighted = (i < effective_len_str &&
 				name_highlight_start != -1 &&
 				i >= name_highlight_start &&
@@ -870,8 +898,8 @@ void M_PrintHighlightScroll2(int x, int y, int maxwidth,
 		}
 
 		int desc_x = x + actual_name_len * 8;
-		for (int i = 0; i < (int)strlen(str2); i++) {
-			char ch = str2[i];
+		for (int i = 0; i < str2_len; i++) {
+			Uint32 ch = utf8_decode_nth(str2, i, str2_bytes);
 			qboolean is_highlighted = (desc_highlight_start != -1 &&
 				i >= desc_highlight_start &&
 				i < desc_highlight_end);
@@ -893,7 +921,7 @@ void M_PrintHighlightScroll2(int x, int y, int maxwidth,
 			continue;
 		}
 
-		char ch = combined[pos];
+		Uint32 ch = utf8_decode_nth(combined, pos, combined_bytes);
 		qboolean is_highlighted = false;
 		qboolean is_bronzed = false;
 
@@ -922,11 +950,12 @@ void M_PrintHighlightScroll2(int x, int y, int maxwidth,
 void M_PrintHighlightScroll(int x, int y, int maxwidth, const char* str, const char* highlight, double time)
 {
 	int maxchars = maxwidth / 8;
-	int len_str = strlen(str);
 
 	char name_str[MAX_CHAT_SIZE_EX];
-	strncpy(name_str, str, sizeof(name_str) - 1);
-	name_str[sizeof(name_str) - 1] = '\0';
+	q_strlcpy(name_str, str, sizeof(name_str));
+
+	size_t name_bytes = strlen(name_str);
+	int len_str = (int)utf8_strlen(name_str, name_bytes);
 
 	int name_highlight_start = -1, name_highlight_end = -1;
 	if (highlight && highlight[0])
@@ -934,8 +963,8 @@ void M_PrintHighlightScroll(int x, int y, int maxwidth, const char* str, const c
 		const char* name_match = q_strcasestr(name_str, highlight);
 		if (name_match)
 		{
-			name_highlight_start = name_match - name_str;
-			name_highlight_end = name_highlight_start + strlen(highlight);
+			name_highlight_start = (int)utf8_strlen(name_str, (size_t)(name_match - name_str));
+			name_highlight_end = name_highlight_start + (int)utf8_strlen(highlight, strlen(highlight));
 			if (name_highlight_end > len_str)
 				name_highlight_end = len_str;
 		}
@@ -949,12 +978,12 @@ void M_PrintHighlightScroll(int x, int y, int maxwidth, const char* str, const c
 	for (int i = 0; i < maxchars; i++)
 	{
 		int pos_in_str = (ofs + i) % scroll_len;
-		char ch;
+		Uint32 ch;
 		qboolean is_highlighted = false;
 
 		if (pos_in_str < len_str)
 		{
-			ch = name_str[pos_in_str];
+			ch = utf8_decode_nth(name_str, pos_in_str, name_bytes);
 
 			if (name_highlight_start != -1 &&
 				pos_in_str >= name_highlight_start && pos_in_str < name_highlight_end)
@@ -968,7 +997,7 @@ void M_PrintHighlightScroll(int x, int y, int maxwidth, const char* str, const c
 		}
 
 		if (is_highlighted)
-			M_DrawCharacter(x + i * 8, y, ch & 127);
+			M_DrawCharacter(x + i * 8, y, ch);
 		else
 			M_DrawCharacter(x + i * 8, y, ch /*| 128*/);
 	}
@@ -1948,7 +1977,7 @@ void M_SinglePlayer_Key(int key)
 			if (sv.active)
 				if (!SCR_ModalMessage(LOC_GetString("$msg_are_you_sure_new"), 0.0f))
 					break;
-			// avião
+			// aviï¿½o
 			m_skill_from_newgame = true;
 			M_Menu_Skill_f();
 			break;
@@ -2054,7 +2083,7 @@ void M_ScanSaves(void)
 	struct stat st;
 #endif
 
-	// avião
+	// aviï¿½o
 	char save_dir[MAX_PATH];
 	GetSaveDir(save_dir, NULL);
 
@@ -2067,7 +2096,7 @@ void M_ScanSaves(void)
 		save_entries[i].original_index = i;
 		q_strlcpy(save_entries[i].mapname, "", sizeof(save_entries[i].mapname));
 
-		// avião
+		// aviï¿½o
 		q_snprintf(name, sizeof(name), "%s/s%i.sav", save_dir, i); // legacy
 		f = fopen(name, "r");
 
@@ -2592,7 +2621,7 @@ void M_Maps_Key(int key)
 			}
 			else
 			{
-				// avião
+				// aviï¿½o
 				m_skill_from_newgame = false;
 				// Original behavior - go to skill menu
 				M_SetSkillMenuMap(mapsmenu.items[mapsmenu.filtered_indices[mapsmenu.list.cursor]].name);
@@ -2940,12 +2969,12 @@ int	m_multiplayer_cursor;
 #define	MULTIPLAYER_ITEMS	3
 extern cvar_t scr_shownet; // woods
 
-//avião
+//aviï¿½o
 int lanConfig_steam_server = 1;
 
 void M_Menu_MultiPlayer_f(void)
 {
-	//avião
+	//aviï¿½o
 	lanConfig_steam_server = 1;
 	key_dest = key_menu;
 	m_state = m_multiplayer;
@@ -3063,7 +3092,7 @@ void M_MultiPlayer_Key(int key)
 		{
 		case 0:
 			if (ipxAvailable || ipv4Available || ipv6Available) {
-				// avião
+				// aviï¿½o
 				lanConfig_steam_server = 0;
 				M_Menu_LanConfig_f(); // woods #skipipx
 			}
@@ -3093,7 +3122,11 @@ All Mods Menu
 */
 
 int	m_allmods_cursor;
+#ifdef NO_PUBLIC
+#define	ALLMODS_ITEMS	1
+#else
 #define	ALLMODS_ITEMS	2
+#endif
 
 void M_Menu_AllMods_f(void)
 {
@@ -3124,9 +3157,11 @@ void M_AllMods_Draw(void)
 	int cursor;
 
 	M_Print(x * invScale, y * invScale, LOC_GetString("$menu_mods")); y += 20;
+#ifndef NO_PUBLIC
 	if (pipe_available) {
 		M_Print(x * invScale, y * invScale, LOC_GetString("$menu_workshop")); y += 20;
 	}
+#endif
 	glPopMatrix();
 
 	f = (int)(realtime * 10) % 6;
@@ -3175,11 +3210,13 @@ void M_AllMods_Key(int key)
 			M_Menu_Mods_f();
 			break;
 
+#ifndef NO_PUBLIC
 		case 1:
 			if (pipe_available) {
 				M_Menu_Workshop_Mods_f();
 			}
 			break;
+#endif
 		}
 	}
 }
@@ -3193,7 +3230,7 @@ void M_AllMods_Mousemove(int cx, int cy) // woods #mousemenu
 /*
 /*
 ==================
-Languages (avião)
+Languages (aviï¿½o)
 ==================
 */
 
@@ -3219,11 +3256,38 @@ static struct
 } languagesmenu;
 
 
+static const char* M_Language_BaseName(const char* file)
+{
+	const char* last;
+
+	if (!file)
+		return "";
+
+	last = file;
+	while (*file)
+	{
+		if (*file == '/' || *file == '\\')
+			last = file + 1;
+		file++;
+	}
+	return last;
+}
+
 static void M_Language_Add(const char* name, const char* filename)
 {
 	languageitem_t language;
-	strncpy(language.name, to_utf8(name), sizeof(language.name));
-	strncpy(language.filename, to_utf8(filename), sizeof(language.filename));
+	const char* utf8;
+
+	memset(&language, 0, sizeof(language));
+
+	utf8 = to_utf8(name);
+	q_strlcpy(language.name, utf8 ? utf8 : "", sizeof(language.name));
+	utf8 = to_utf8(filename);
+	q_strlcpy(language.filename, utf8 ? utf8 : "", sizeof(language.filename));
+
+	language.active = language.filename[0] &&
+		!q_strcasecmp(M_Language_BaseName(language.filename), M_Language_BaseName(LOC_GetFile()));
+
 	if (language.active && languagesmenu.list.cursor == -1)
 		languagesmenu.list.cursor = languagesmenu.list.numitems;
 
@@ -3251,9 +3315,9 @@ static void M_Language_Init(void)
 	Pipe_Write("languages");
 	for (;;) {
 		if (!Pipe_Read()) break; if (pipe_buffer[0] == '\x04') break;
-		char name[1024];  strncpy(name, pipe_buffer, sizeof(name));
+		char name[1024];  q_strlcpy(name, pipe_buffer, sizeof(name));
 		if (!Pipe_Read()) break;
-		char filename[1024];  strncpy(filename, pipe_buffer, sizeof(filename));
+		char filename[1024];  q_strlcpy(filename, pipe_buffer, sizeof(filename));
 		M_Language_Add(name, filename);
 	}
 
@@ -3368,11 +3432,27 @@ void M_Language_Key(int key)
 	case K_KP_ENTER:
 	case K_ABUTTON:
 	enter:
-		languageitem_t* selected_language = &languagesmenu.items[languagesmenu.list.cursor];
-		LOC_LoadFile(selected_language->filename);
-		select_font();
-		Draw_ReloadTextures(true);
-		M_Menu_Main_f();
+		{
+			languageitem_t* selected_language;
+
+			if (languagesmenu.list.cursor < 0 || languagesmenu.list.cursor >= languagesmenu.list.numitems)
+				break;
+
+			selected_language = &languagesmenu.items[languagesmenu.list.cursor];
+
+			if (LOC_LoadFile(selected_language->filename))
+			{
+				if (select_font_for_language(selected_language->filename))
+					reload_fonts();
+			}
+			else
+			{
+				Con_Warning("Language '%s' could not be loaded from '%s'\n",
+					selected_language->name, selected_language->filename);
+			}
+
+			M_Menu_Main_f();
+		}
 		break;
 
 	case K_MOUSE1: // woods #mousemenu
@@ -4461,10 +4541,10 @@ void M_Options_Draw(void)
 			}
 			break;
 		case OPT_CONSOLE:
-			text = LOC_GetString("$menu_console");
+			text = LOC_GetString("$menu_consoleitem");
 			break;
 		case OPT_LANGUAGES:
-			text = LOC_GetString("$menu_languages");
+			text = LOC_GetString("$menu_languagesitem");
 			break;
 		}
 
@@ -4528,9 +4608,9 @@ static const char* M_Options_GetItemText(int index)
 	case OPT_MENUSCALE:
 		return LOC_GetString("$menu_menuscale");
 	case OPT_CONSOLE:
-		return LOC_GetString("$menu_console");
+		return LOC_GetString("$menu_consoleitem");
 	case OPT_LANGUAGES:
-		return LOC_GetString("$menu_languages");
+		return LOC_GetString("$menu_languagesitem");
 	default:
 		return "";
 	}
@@ -4967,25 +5047,7 @@ void M_Menu_Keys_f(void)
 
 qboolean IsCompleteCommand(const char* binding, const char* command)
 {
-	if (!strcmp(binding, command))
-		return true;
-
-	if (strstr(command, "impulse ") == command)
-	{
-		if (strstr(binding, "impulse ") == binding)
-		{
-			const char* bind_num = binding + 8;
-			const char* cmd_num = command + 8;
-
-			char* bind_end;
-			char* cmd_end;
-			int bind_val = strtol(bind_num, &bind_end, 10);
-			int cmd_val = strtol(cmd_num, &cmd_end, 10);
-
-			return (*bind_end == '\0' && *cmd_end == '\0' && bind_val == cmd_val);
-		}
-	}
-	return false;
+	return Key_BindingMatchesCommand(binding, command);
 }
 
 void M_FindKeysForCommand(const char* command, int* threekeys)
@@ -7301,7 +7363,7 @@ static enum game_e
 	GAME_VIEWMODEL,
 	GAME_TEAMCOLOR,
 	GAME_ENEMYCOLOR,
-	GAME_AUTOAIM, //avião
+	GAME_AUTOAIM, //aviï¿½o
 	GAME_COUNT,
 } game_cursor;
 
@@ -8028,8 +8090,8 @@ static enum hud_e
 	HUD_CROSSHAIR,
 	HUD_SCALE,
 	HUD_SCRSIZE,
-	HUD_SBALPHA,
 #ifndef BDDPRE4
+	HUD_SBALPHA,
 	HUD_SBARSTYLE,
 #endif
 	HUD_SHOWFPS,
@@ -8072,9 +8134,9 @@ static const char* M_HUD_GetItemText(int index)
 		return LOC_GetString("$menu_hud_scale");
 	case HUD_SCRSIZE:
 		return LOC_GetString("$menu_screen_size");
+#ifndef BDDPRE4
 	case HUD_SBALPHA:
 		return LOC_GetString("$menu_statusbar_alpha");
-#ifndef BDDPRE4
 	case HUD_SBARSTYLE:
 		return LOC_GetString("$menu_status_bar_style");
 #endif
@@ -8144,13 +8206,13 @@ static void M_HUD_AdjustSliders(int dir)
 		Cvar_SetValue("viewsize", f);
 		break;
 
+#ifndef BDDPRE4
 	case HUD_SBALPHA:
 		f = scr_sbaralpha.value - dir * 0.05;
 		if (f < 0) f = 0;
 		else if (f > 1) f = 1;
 		Cvar_SetValue("scr_sbaralpha", f);
 		break;
-#ifndef BDDPRE4
 	case HUD_SBARSTYLE:
 		value = scr_sbar.value + dir;
 		if (value > 3) value = 1;
@@ -8254,13 +8316,13 @@ void M_HUD_Draw(void)
 			M_DrawSlider(186, y, r, scr_viewsize.value, "%.0f");
 			break;
 
+#ifndef BDDPRE4
 		case HUD_SBALPHA:
 			text = LOC_GetString("$menu_statusbar_alpha_indented");
 			r = (1.0 - scr_sbaralpha.value);
 			M_DrawSlider(186, y, r, 100.0f * r, "%.0f%%");
 			break;
 
-#ifndef BDDPRE4
 		case HUD_SBARSTYLE:
 			text = LOC_GetString("$menu_status_bar_style_indented");
 			switch ((int)scr_sbar.value)
@@ -8534,7 +8596,9 @@ void M_HUD_Key(int k)
 
 			if (hud_cursor == HUD_SCALE ||
 				hud_cursor == HUD_SCRSIZE ||
+#ifndef BDDPRE4
 				hud_cursor == HUD_SBALPHA ||
+#endif
 				hud_cursor == HUD_CONSOLEFONT)
 			{
 				hud_slider_grab = true;
@@ -8651,10 +8715,12 @@ void M_HUD_Mousemove(int cx, int cy)
 			Cvar_SetValue("viewsize", f);
 			break;
 
+#ifndef BDDPRE4
 		case HUD_SBALPHA:
 			f = 1.0 - M_MouseToSliderFraction(cx - 187);
 			Cvar_SetValue("scr_sbaralpha", f);
 			break;
+#endif
 
 		case HUD_CONSOLEFONT:
 			f = M_MouseToSliderFraction(cx - 187);
@@ -10148,14 +10214,15 @@ static void GetCenteredTextPosition(const char* text, int* out_x, int* out_y)
 {
 	int max_width = 0;
 	int width = 0;
-	int strl = strlen(text);
+	size_t bytes = strlen(text);
+	int strl = (int)utf8_strlen(text, bytes);
 	for (int i = 0; i < strl; i++) {
-		Uint32 codepoint = utf8_decode_nth(text, i, strl);
+		Uint32 codepoint = utf8_decode_nth(text, i, bytes);
 		if (codepoint == '\n') {
-			if (utf8_decode_nth(text, i - 1, strl) == ' ') {
+			if (i > 0 && utf8_decode_nth(text, i - 1, bytes) == ' ') {
 				width -= 8;
 			}
-			if (utf8_decode_nth(text, i + 1, strl) == ' ') {
+			if (utf8_decode_nth(text, i + 1, bytes) == ' ') {
 				width -= 8;
 			}
 			if (width > max_width) {
@@ -10172,7 +10239,7 @@ static void GetCenteredTextPosition(const char* text, int* out_x, int* out_y)
 
 	int height = 8;
 	for (int i = 0; i < strl; i++) {
-		Uint32 codepoint = utf8_decode_nth(text, i, strl);
+		Uint32 codepoint = utf8_decode_nth(text, i, bytes);
 		if (codepoint == '\n') {
 			height += 8;
 		}
@@ -10604,73 +10671,84 @@ void M_GameOver_GoBack(void) {
 	m_state = m_main;
 }
 
-/*
-==================
-Campaign map list
-==================
-*/
+extern char modal_message[MAX_PATH];
+extern char modal_yes[MAX_PATH];
+extern char modal_no[MAX_PATH];
 
-#define CAMPAIGN_EPISODE_NAME	"Main"
+int m_modal_cursor;
 
-typedef struct
+void M_Menu_CustomModal_f(void) {
+	if (!modal_message[0])
+		return;
+
+	m_modal_cursor = 0;
+	key_dest = key_menu;
+	m_state = m_modal;
+	m_entersound = true;
+	IN_UpdateGrabs();
+}
+
+static void M_Modal_Answer(int option) {
+	modal_message[0] = '\0';
+	m_modal_cursor = 0;
+	key_dest = key_game;
+	m_state = m_none;
+	IN_UpdateGrabs();
+	Cbuf_AddText(va("impulse %i\n", option == 0 ? 51 : 52));
+}
+
+void M_Modal_Key(int key)
 {
-	const char* name;
-	const char* description;
-} campaignmap_t;
-
-static campaignmap_t* campaignmaps = NULL;
-static json_t* campaignjson = NULL;
-static qboolean			campaignmaps_loaded = false;
-
-static void M_Campaign_LoadMaps(void)
-{
-	char* text;
-	const jsonentry_t* entry;
-
-	if (campaignmaps_loaded)
-		return;
-	campaignmaps_loaded = true;
-
-	text = (char*)COM_LoadMallocFile("campaign.json", NULL);
-	if (!text)
-		return;
-
-	campaignjson = JSON_Parse(text);
-	free(text);
-
-	if (!campaignjson || !campaignjson->root)
+	switch (key)
 	{
-		Con_Warning("Couldn't parse campaign.json\n");
-		return;
-	}
+	case K_DOWNARROW:
+		S_LocalSound("misc/menu1.wav");
+		if (++m_modal_cursor > 1)
+			m_modal_cursor = 0;
+		break;
 
-	for (entry = campaignjson->root->firstchild; entry; entry = entry->next)
-	{
-		campaignmap_t map;
-		const char* name = JSON_FindString(entry, "name");
-		const char* data = JSON_FindString(entry, "data");
+	case K_UPARROW:
+		S_LocalSound("misc/menu1.wav");
+		if (--m_modal_cursor < 0)
+			m_modal_cursor = 1;
+		break;
 
-		if (!name || !*name)
-			continue;
-
-		map.name = name;
-		map.description = (data && *data) ? data : name;
-
-		VEC_PUSH(campaignmaps, map);
+	case K_ENTER:
+	case K_KP_ENTER:
+	case K_ABUTTON:
+	case K_MOUSE1:
+		S_LocalSound("misc/menu2.wav");
+		M_Modal_Answer(m_modal_cursor);
+		break;
 	}
 }
 
-static int M_Campaign_GetMapCount(void)
-{
-	M_Campaign_LoadMaps();
-	return (int)VEC_SIZE(campaignmaps);
+void M_Modal_Draw(void) {
+	M_DrawTransPic(16, 4, Draw_CachePic("gfx/qplaque.lmp"));
+
+	const double scale = 1.5;
+	const double invScale = 1.0 / scale;
+	glPushMatrix();
+	glScalef(scale, scale, scale);
+
+	int x = 72;
+	int y = 32;
+
+	M_Print(x * invScale, y * invScale, LOC_GetString(modal_message)); y += 20;
+	M_Print(x * invScale, y * invScale, LOC_GetString(modal_yes)); y += 20;
+	M_Print(x * invScale, y * invScale, LOC_GetString(modal_no)); y += 20;
+
+	glPopMatrix();
+
+	int cursor, f;
+	f = (int)(realtime * 10) % 6;
+	cursor = m_modal_cursor;
+	M_DrawTransPic(44, 44 + cursor * 20, Draw_CachePic(va("gfx/menudot%i.lmp", f + 1)));
 }
 
-static const campaignmap_t* M_Campaign_GetMap(int index)
+void M_Modal_Mousemove(int cx, int cy)
 {
-	if (index < 0 || index >= M_Campaign_GetMapCount())
-		return NULL;
-	return &campaignmaps[index];
+	M_UpdateCursor(cy, 52, 20, 2, &m_modal_cursor);
 }
 
 /*
@@ -10725,27 +10803,9 @@ static void M_Campaign_Refilter(void)
 	M_List_CenterCursor(&campaignmenu.list);
 }
 
-static void M_Campaign_UnloadMaps(void)
-{
-	campaignmenu.mapcount = 0;
-	campaignmenu.list.numitems = 0;
-	campaignmenu.list.cursor = 0;
-	campaignmenu.list.scroll = 0;
-	VEC_CLEAR(campaignmenu.items);
-	VEC_CLEAR(campaignmenu.filtered_indices);
-
-	VEC_CLEAR(campaignmaps);
-	if (campaignjson)
-	{
-		JSON_Free(campaignjson);
-		campaignjson = NULL;
-	}
-	campaignmaps_loaded = false;
-}
-
 static void M_Campaign_Init(void)
 {
-	int i, count;
+	filelist_item_t* item;
 
 	campaignmenu.scrollbar_grab = false;
 	campaignmenu.list.viewsize = MAX_VIS_MAPS;
@@ -10761,11 +10821,21 @@ static void M_Campaign_Init(void)
 
 	M_Ticker_Init(&campaignmenu.ticker);
 
-	count = M_Campaign_GetMapCount();
-	for (i = 0; i < count; i++)
-	{
-		const campaignmap_t* map = M_Campaign_GetMap(i);
-		M_Campaign_Add(map->name, map->description);
+	const char* campaign_data = (const char*)COM_LoadMallocFile("campaign.json", NULL);
+	if (campaign_data) {
+		json_t* campaign_json = JSON_Parse(campaign_data);
+		free(campaign_data);
+		if (campaign_json == NULL) {
+			return;
+		}
+		jsonentry_t* sub_item = campaign_json->root->firstchild;
+		while (sub_item)
+		{
+			const jsonentry_t* name = JSON_Find(sub_item, "name", JSON_STRING);
+			const jsonentry_t* data = JSON_Find(sub_item, "data", JSON_STRING);
+			M_Campaign_Add(name->string, data->string);
+			sub_item = sub_item->next;
+		}
 	}
 
 	M_Campaign_Refilter();
@@ -11391,9 +11461,17 @@ LAN Config Menu
 */
 
 int		lanConfig_cursor = -1;
+#ifdef NO_PUBLIC
+int     lanConfig_cursor_table_steamnewgame[] = { -16, 60 };
+#else
 int     lanConfig_cursor_table_steamnewgame[] = { 52, 60 };
+#endif
 int     lanConfig_cursor_table_newgame[] = { 52, 84, 94, 112 }; // Updated cursor positions for "New Game"
+#ifdef NO_PUBLIC
+int		lanConfig_cursor_table[] = { -16, -16, -16, 60, -16, -16, -16 };
+#else
 int		lanConfig_cursor_table[] = { 84, 102, 110, 116, 124, 148 }; // woods #mousemenu #bookmarksmenu
+#endif
 int* lanConfig_cursor_ptr = NULL; // Pointer to the current cursor table
 
 int     NUM_LANCONFIG_CMDS;
@@ -11519,6 +11597,14 @@ void M_Menu_LanConfig_f(void)
 	}
 	if (StartingGame && lanConfig_cursor >= 3)
 		lanConfig_cursor = 1;
+#ifdef NO_PUBLIC
+	if (JoiningGame)
+		lanConfig_cursor = 3;
+	if (StartingGame) {
+		lanConfig_steam_server = 1;
+		lanConfig_cursor = 1;
+	}
+#endif
 	lanConfig_port = DEFAULTnet_hostport;
 	sprintf(lanConfig_portname, "%u", lanConfig_port);
 
@@ -11562,7 +11648,8 @@ void M_LanConfig_Draw(void)
 
 	y = 52;
 
-	//avião
+	//aviï¿½o
+#ifndef NO_PUBLIC
 	if (StartingGame) {
 		M_Print(basex, y, LOC_GetString("$menu_steam_server"));
 		const char* steamServerDescription = lanConfig_steam_server == 0 ? LOC_GetString("$no") : LOC_GetString("$yes");
@@ -11572,8 +11659,13 @@ void M_LanConfig_Draw(void)
 			M_DrawCharacter(basex - 8, y, 12 + ((int)(realtime * 4) & 1));
 		}
 	}
+#endif
 	if (JoiningGame || !lanConfig_steam_server)
 	{
+#ifdef NO_PUBLIC
+		if (StartingGame)
+		{
+#endif
 		y += 8;
 		M_Print(basex, y, LOC_GetString("$menu_address_colon"));
 
@@ -11635,6 +11727,9 @@ void M_LanConfig_Draw(void)
 			M_DrawCharacter(basex - 10, y, 12 + ((int)(realtime * 4) & 1));
 		}
 		y += 8;
+#ifdef NO_PUBLIC
+		}
+#endif
 
 		if (StartingGame)
 		{
@@ -11651,6 +11746,7 @@ void M_LanConfig_Draw(void)
 
 		if (JoiningGame)
 		{
+#ifndef NO_PUBLIC
 			y += 8;
 			M_Print(basex, y, LOC_GetString("$menu_search_for_local_games"));
 			if (lanConfig_cursor == 1)
@@ -11659,6 +11755,7 @@ void M_LanConfig_Draw(void)
 			M_Print(basex, y, LOC_GetString("$menu_search_for_public_games"));
 			if (lanConfig_cursor == 2)
 				M_DrawCharacter(basex - 8, y, 12 + ((int)(realtime * 4) & 1));
+#endif
 			y += 8;
 
 			M_Print(basex, y, LOC_GetString("$menu_search_for_steam_games"));
@@ -11666,6 +11763,7 @@ void M_LanConfig_Draw(void)
 				M_DrawCharacter(basex - 8, y, 12 + ((int)(realtime * 4) & 1));
 			y += 8;
 
+#ifndef NO_PUBLIC
 			M_Print(basex, y, LOC_GetString("$menu_history"));
 			if (lanConfig_cursor == 4)
 				M_DrawCharacter(basex - 8, y, 12 + ((int)(realtime * 4) & 1));
@@ -11694,6 +11792,7 @@ void M_LanConfig_Draw(void)
 			y += 8;
 			M_Print(basex, y, " ");
 			y += 4;
+#endif
 		}
 		else
 		{
@@ -11726,7 +11825,11 @@ void M_LanConfig_Draw(void)
 
 	}
 	else {
+#ifdef NO_PUBLIC
+		y += 8;
+#else
 		y += 16;
+#endif
 		M_DrawTextBox(basex, y - 8, 2, 1);
 		M_Print(basex + 8, y, LOC_GetString("$menu_ok"));
 		if (lanConfig_cursor == 1)
@@ -11741,7 +11844,11 @@ void M_LanConfig_Key(int key)
 {
 	int		l;
 
-	if (key == K_MOUSE1)
+	if (key == K_MOUSE1
+#ifdef NO_PUBLIC
+		&& StartingGame
+#endif
+		)
 	{
 		for (int i = 0; i < 2; i++)
 		{
@@ -11801,11 +11908,17 @@ void M_LanConfig_Key(int key)
 			if (lanConfig_cursor < 0) {
 				lanConfig_cursor = NUM_LANCONFIG_CMDS_NEWGAME - 1;
 			}
+#ifdef NO_PUBLIC
+			lanConfig_cursor = 1;
+#endif
 		}
 		else {
 			if (lanConfig_cursor < 0) {
 				lanConfig_cursor = NUM_LANCONFIG_CMDS_JOINGAME - 1;
 			}
+#ifdef NO_PUBLIC
+			lanConfig_cursor = 3;
+#endif
 		}
 		break;
 
@@ -11817,21 +11930,29 @@ void M_LanConfig_Key(int key)
 			if (lanConfig_cursor >= NUM_LANCONFIG_CMDS_NEWGAME) {
 				lanConfig_cursor = 0;
 			}
+#ifdef NO_PUBLIC
+			lanConfig_cursor = 1;
+#endif
 		}
 		else {
 			if (lanConfig_cursor >= NUM_LANCONFIG_CMDS_JOINGAME) {
 				lanConfig_cursor = 0;
 			}
+#ifdef NO_PUBLIC
+			lanConfig_cursor = 3;
+#endif
 		}
 		break;
 
 	case K_MWHEELUP:
 	case K_LEFTARROW:
+#ifndef NO_PUBLIC
 		if (StartingGame && lanConfig_cursor == 0)
 		{
 			S_LocalSound("misc/menu1.wav");
 			lanConfig_steam_server = !lanConfig_steam_server;
 		}
+#endif
 		if (StartingGame && lanConfig_cursor == 2)
 		{
 			S_LocalSound("misc/menu1.wav");
@@ -11845,11 +11966,13 @@ void M_LanConfig_Key(int key)
 
 	case K_MWHEELDOWN:
 	case K_RIGHTARROW:
+#ifndef NO_PUBLIC
 		if (StartingGame && lanConfig_cursor == 0)
 		{
 			S_LocalSound("misc/menu1.wav");
 			lanConfig_steam_server = !lanConfig_steam_server;
 		}
+#endif
 		if (StartingGame && lanConfig_cursor == 2)
 		{
 			S_LocalSound("misc/menu1.wav");
@@ -11871,11 +11994,13 @@ void M_LanConfig_Key(int key)
 
 		if (StartingGame)
 		{
+#ifndef NO_PUBLIC
 			if (lanConfig_cursor == 0) {
 
 				S_LocalSound("misc/menu1.wav");
 				lanConfig_steam_server = !lanConfig_steam_server;
 			}
+#endif
 
 			if (lanConfig_steam_server == 0) {
 				if (lanConfig_cursor == 2)
@@ -11898,18 +12023,22 @@ void M_LanConfig_Key(int key)
 		}
 		else
 		{
+#ifndef NO_PUBLIC
 			if (lanConfig_cursor == 1) {
-				Cbuf_AddText("steamserver 0"); //avião
+				Cbuf_AddText("steamserver 0"); //aviï¿½o
 				M_Menu_Search_f(SLIST_LAN);
 			}
 			else if (lanConfig_cursor == 2) {
-				Cbuf_AddText("steamserver 0"); //avião
+				Cbuf_AddText("steamserver 0"); //aviï¿½o
 				M_Menu_Search_f(SLIST_INTERNET);
 			}
-			else if (lanConfig_cursor == 3) {
-				Cbuf_AddText("steamserver 1"); //avião
+			else
+#endif
+			if (lanConfig_cursor == 3) {
+				Cbuf_AddText("steamserver 1"); //aviï¿½o
 				M_Menu_Search_f(SLIST_INTERNET);
 			}
+#ifndef NO_PUBLIC
 			else if (lanConfig_cursor == 4) // woods #historymenu
 				M_Menu_History_f();
 			else if (lanConfig_cursor == 5) // woods #bookmarksmenu
@@ -11923,6 +12052,7 @@ void M_LanConfig_Key(int key)
 				IN_UpdateGrabs();
 				Cbuf_AddText(va("connect \"%s\"\n", lanConfig_joinname));
 			}
+#endif
 		}
 
 		break;
@@ -11934,11 +12064,13 @@ void M_LanConfig_Key(int key)
 				lanConfig_portname[strlen(lanConfig_portname) - 1] = 0;
 		}
 
+#ifndef NO_PUBLIC
 		if (lanConfig_cursor == 5) // woods #historymenu #bookmarksmenu
 		{
 			if (strlen(lanConfig_joinname))
 				lanConfig_joinname[strlen(lanConfig_joinname) - 1] = 0;
 		}
+#endif
 		break;
 	}
 
@@ -11975,6 +12107,7 @@ void M_LanConfig_Char(int key)
 			lanConfig_portname[l] = key;
 		}
 		break;
+#ifndef NO_PUBLIC
 	case 5: // woods #historymenu #bookmarksmenu
 		l = strlen(lanConfig_joinname);
 		if (l < 21)
@@ -11983,6 +12116,7 @@ void M_LanConfig_Char(int key)
 			lanConfig_joinname[l] = key;
 		}
 		break;
+#endif
 	}
 }
 
@@ -12763,7 +12897,11 @@ void M_Bookmarks_Edit_Mousemove(int cx, int cy) // woods #mousemenu
 
 qboolean M_LanConfig_TextEntry(void)
 {
+#ifdef NO_PUBLIC
+	return (lanConfig_cursor == 0);
+#else
 	return (lanConfig_cursor == 0 || lanConfig_cursor == 5); // woods #historymenu #bookmarksmenu
+#endif
 }
 
 void M_LanConfig_Mousemove(int cx, int cy)
@@ -12779,7 +12917,7 @@ void M_LanConfig_Mousemove(int cx, int cy)
 		}
 	}
 
-	// avião
+	// aviï¿½o
 	int numCommands = StartingGame ? !lanConfig_steam_server ? NUM_LANCONFIG_CMDS_NEWGAME : 2 : NUM_LANCONFIG_CMDS_JOINGAME;
 	int* subCursor_ptr = StartingGame && lanConfig_steam_server ? lanConfig_cursor_table_steamnewgame : lanConfig_cursor_ptr;
 	M_UpdateCursorWithTable(cy, subCursor_ptr, numCommands, &lanConfig_cursor);
@@ -12796,6 +12934,52 @@ typedef struct
 	const char* name;
 	const char* description;
 } level_t;
+
+level_t		levels[] =
+{
+	{"start", "Entrance"},	// 0
+
+	{"2MAPA2", "Cervejinha e Satanismo"},				// 1
+	{"3MAPATREZE", "MARACA"},
+	{"4CARRETA", "CARRETA FURINGAO"},
+	{"5salga", "SALGUEIRO"},
+	{"chavinha19", "SALVE A VILA"},
+	{"praca16", "SALVE SAVIO"},
+	{"aniversarioguanaSAOGONCALO", "SUPERMERCADO CHUPARABA"},
+	{"surfamazonia", "SURFAMAZONIA"},
+	{"zegaroto", "PRACA DO ZE GAROTO"},
+	{"6globe", "ESTUDIOS GLOBE"},
+	{"7niteroi", "NITEROI"},
+	{"8varginhao", "AMIGOS ET DE VARGINHA"},
+	{"9cristopaodeacucar", "Cristo e pao de acucar juntado"},
+	{"10cristopaodeacucar2", "SALVE EDINHO"},
+	{"11EDINHO", "CASA DO ED COM SEGREDO"},
+	{"12copaloco", "Copacana e show do mamadas"},
+	{"13sambodromo", "Sambodromo"},
+	{"14metrorio", "METRO DO RIO"},
+	{"15amanha", "MUSEU DO AMANHA"},
+	{"16ULTIMAFASE", "BATALHA COM DEMONIO VASQINO"},
+	{"17final", "o final de tudo"},
+	{"18finalepilogue", "RESENHA COM MIT E AMIGOS NO CEU"},
+
+	{"e4m1", "The Sewage System"},				// 23
+	{"e4m2", "The Tower of Despair"},
+	{"e4m3", "The Elder God Shrine"},
+	{"e4m4", "The Palace of Hate"},
+	{"e4m5", "Hell's Atrium"},
+	{"e4m6", "The Pain Maze"},
+	{"e4m7", "Azure Agony"},
+	{"e4m8", "The Nameless City"},
+
+	{"end", "Shub-Niggurath's Pit"},			// 31
+
+	{"dm1", "Place of Two Deaths"},				// 32
+	{"dm2", "Claustrophobopolis"},
+	{"dm3", "The Abandoned Base"},
+	{"dm4", "The Bad Place"},
+	{"dm5", "The Cistern"},
+	{"dm6", "The Dark Zone"}
+};
 
 //MED 01/06/97 added hipnotic levels
 level_t     hipnoticlevels[] =
@@ -12855,6 +13039,17 @@ typedef struct
 	int		levels;
 } episode_t;
 
+episode_t	episodes[] =
+{
+	{"AVIAOZIN3", 0, 23},
+	{"AVIAOZIN3", 0, 23},
+	{"AVIAOZIN3", 0, 23},
+	{"AVIAOZIN3", 0, 23},
+	{"AVIAOZIN3", 0, 23},
+	{"AVIAOZIN3", 0, 23},
+	{"AVIAOZIN3", 0, 23}
+};
+
 //MED 01/06/97  added hipnotic episodes
 episode_t   hipnoticepisodes[] =
 {
@@ -12878,6 +13073,90 @@ episode_t	rogueepisodes[] =
 
 extern cvar_t sv_public;
 
+static level_t	*campaignlevels = NULL;
+static int		campaignlevelcount = 0;
+
+static void M_GameOptions_FreeCampaign(void)
+{
+	int i;
+
+	for (i = 0; i < campaignlevelcount; i++)
+	{
+		free((void *)campaignlevels[i].name);
+		free((void *)campaignlevels[i].description);
+	}
+
+	free(campaignlevels);
+	campaignlevels = NULL;
+	campaignlevelcount = 0;
+}
+
+static char *M_GameOptions_CopyString(const char *src)
+{
+	size_t	len = strlen(src) + 1;
+	char	*out = (char *)malloc(len);
+
+	if (out)
+		memcpy(out, src, len);
+
+	return out;
+}
+
+static void M_GameOptions_LoadCampaign(void)
+{
+	const char		*data;
+	json_t			*json;
+	jsonentry_t		*item;
+	int				count;
+
+	M_GameOptions_FreeCampaign();
+
+	data = (const char *)COM_LoadMallocFile("campaign.json", NULL);
+	if (!data)
+		return;
+
+	json = JSON_Parse(data);
+	free((void *)data);
+	if (!json)
+		return;
+
+	count = 0;
+	for (item = json->root->firstchild; item; item = item->next)
+		count++;
+
+	if (count > 0)
+	{
+		campaignlevels = (level_t *)malloc(sizeof(*campaignlevels) * count);
+
+		if (campaignlevels)
+		{
+			for (item = json->root->firstchild; item; item = item->next)
+			{
+				const jsonentry_t *name = JSON_Find(item, "name", JSON_STRING);
+				const jsonentry_t *desc = JSON_Find(item, "data", JSON_STRING);
+
+				if (!name || !name->string)
+					continue;
+
+				campaignlevels[campaignlevelcount].name = M_GameOptions_CopyString(name->string);
+				campaignlevels[campaignlevelcount].description = M_GameOptions_CopyString(
+					(desc && desc->string) ? desc->string : name->string);
+
+				if (!campaignlevels[campaignlevelcount].name ||
+					!campaignlevels[campaignlevelcount].description)
+					break;
+
+				campaignlevelcount++;
+			}
+		}
+	}
+
+	JSON_Free(json);
+
+	if (!campaignlevelcount)
+		M_GameOptions_FreeCampaign();
+}
+
 int	startepisode;
 int	startlevel;
 int maxplayers;
@@ -12888,16 +13167,26 @@ void M_Menu_GameOptions_f(void)
 	m_state = m_gameoptions;
 	IN_UpdateGrabs();
 	m_entersound = true;
-	if (!hipnotic && !rogue)
-	{
-		startepisode = 0;
-		if (startlevel >= M_Campaign_GetMapCount())
-			startlevel = 0;
-	}
 	if (maxplayers == 0)
 		maxplayers = svs.maxclients;
 	if (maxplayers < 2)
 		maxplayers = 16;
+
+	if (!hipnotic && !rogue)
+	{
+		M_GameOptions_LoadCampaign();
+
+		if (campaignlevelcount)
+		{
+			startepisode = 0;
+
+			if (startlevel >= campaignlevelcount)
+				startlevel = campaignlevelcount - 1;
+
+			if (startlevel < 0)
+				startlevel = 0;
+		}
+	}
 }
 
 
@@ -13020,7 +13309,7 @@ void M_GameOptions_Draw(void)
 		switch ((int)teamplay.value)
 		{
 		case 1: msg = LOC_GetString("$menu_no_friendly_fire"); break;
-		case 2: msg = LOC_GetString("$menu_friendly_fire)"); break;
+		case 2: msg = LOC_GetString("$menu_friendly_fire"); break;
 		default: msg = LOC_GetString("$menu_off"); break;
 		}
 		M_Print(160, y, msg);
@@ -13057,8 +13346,10 @@ void M_GameOptions_Draw(void)
 		M_Print(160, y, hipnoticepisodes[startepisode].description);
 	else if (rogue)
 		M_Print(160, y, rogueepisodes[startepisode].description);
+	else if (campaignlevelcount)
+		M_Print(160, y, LOC_GetString("$menu_campaign"));
 	else
-		M_Print(160, y, CAMPAIGN_EPISODE_NAME);
+		M_Print(160, y, episodes[startepisode].description);
 	y += 8;
 
 	M_Print(0, y, LOC_GetString("$menu_level"));
@@ -13078,16 +13369,21 @@ void M_GameOptions_Draw(void)
 		else
 			M_PrintWhite(160, y + 8, roguelevels[rogueepisodes[startepisode].firstLevel + startlevel].name);
 	}
+	else if (campaignlevelcount)
+	{
+		M_Print(160, y, LOC_GetString(campaignlevels[startlevel].description));
+		if (m_skill_mapname[0])
+			M_PrintRGBA(160, y + 8, campaignlevels[startlevel].name, CL_PLColours_Parse("0xffffff"), 0.5, false);
+		else
+			M_PrintWhite(160, y + 8, campaignlevels[startlevel].name);
+	}
 	else
 	{
-		const campaignmap_t* map = M_Campaign_GetMap(startlevel);
-		const char* mapname = map ? map->name : "";
-
-		M_Print(160, y, map ? LOC_GetString(map->description) : LOC_GetString("$menu_none"));
+		M_Print(160, y, levels[episodes[startepisode].firstLevel + startlevel].description);
 		if (m_skill_mapname[0])
-			M_PrintRGBA(160, y + 8, mapname, CL_PLColours_Parse("0xffffff"), 0.5, false);
+			M_PrintRGBA(160, y + 8, levels[episodes[startepisode].firstLevel + startlevel].name, CL_PLColours_Parse("0xffffff"), 0.5, false);
 		else
-			M_PrintWhite(160, y + 8, mapname);
+			M_PrintWhite(160, y + 8, levels[episodes[startepisode].firstLevel + startlevel].name);
 	}
 	y += 24;
 
@@ -13164,8 +13460,12 @@ void M_NetStart_Change(int dir)
 		//PGM 03/02/97 added 1 for dmatch episode
 		else if (rogue)
 			count = 4;
-		else
+		else if (campaignlevelcount)
 			count = 1;
+		else if (registered.value)
+			count = 7;
+		else
+			count = 2;
 
 		if (startepisode < 0)
 			startepisode = count - 1;
@@ -13185,14 +13485,10 @@ void M_NetStart_Change(int dir)
 		//PGM 01/06/97 added hipnotic episodes
 		else if (rogue)
 			count = rogueepisodes[startepisode].levels;
+		else if (campaignlevelcount)
+			count = campaignlevelcount;
 		else
-			count = M_Campaign_GetMapCount();
-
-		if (count <= 0)
-		{
-			startlevel = 0;
-			break;
-		}
+			count = episodes[startepisode].levels;
 
 		if (startlevel < 0)
 			startlevel = count - 1;
@@ -13265,23 +13561,6 @@ void M_GameOptions_Key(int key)
 		S_LocalSound("misc/menu2.wav");
 		if (gameoptions_cursor == 0)
 		{
-			const char* mapname;
-
-			if (m_skill_mapname[0])
-				mapname = m_skill_mapname;
-			else if (hipnotic)
-				mapname = hipnoticlevels[hipnoticepisodes[startepisode].firstLevel + startlevel].name;
-			else if (rogue)
-				mapname = roguelevels[rogueepisodes[startepisode].firstLevel + startlevel].name;
-			else
-			{
-				const campaignmap_t* map = M_Campaign_GetMap(startlevel);
-				mapname = map ? map->name : NULL;
-			}
-
-			if (!mapname || !*mapname)
-				return;
-
 			if (sv.active)
 				Cbuf_AddText("disconnect\n");
 
@@ -13291,7 +13570,21 @@ void M_GameOptions_Key(int key)
 			Cbuf_AddText(va("maxplayers %u\n", maxplayers));
 			SCR_BeginLoadingPlaque();
 
-			Cbuf_AddText(va("map %s\n", mapname));
+			if (m_skill_mapname[0])  // If custom map is selected
+			{
+				Cbuf_AddText(va("map %s\n", m_skill_mapname));
+			}
+			else  // Use regular episode/level selection
+			{
+				if (hipnotic)
+					Cbuf_AddText(va("map %s\n", hipnoticlevels[hipnoticepisodes[startepisode].firstLevel + startlevel].name));
+				else if (rogue)
+					Cbuf_AddText(va("map %s\n", roguelevels[rogueepisodes[startepisode].firstLevel + startlevel].name));
+				else if (campaignlevelcount)
+					Cbuf_AddText(va("map %s\n", campaignlevels[startlevel].name));
+				else
+					Cbuf_AddText(va("map %s\n", levels[episodes[startepisode].firstLevel + startlevel].name));
+			}
 
 			return;
 		}
@@ -13819,7 +14112,7 @@ void RemoveDuplicateServers(servertitem_t** items, int* actualServerCount)
 
 extern cvar_t steamserver;
 
-// avião
+// aviï¿½o
 void GNS_FetchServerList(servertitem_t** items, int* actualServerCount) {
 	Pipe_Write("server_list");
 	if (Pipe_Read()) {
@@ -13833,7 +14126,7 @@ void FetchAndSortServers(void)
 	serversmenu.items = NULL;
 	int actualServerCount = 0;
 
-	// avião
+	// aviï¿½o
 	if (steamserver.value) {
 		GNS_FetchServerList(&serversmenu.items, &actualServerCount);
 	}
@@ -15125,11 +15418,13 @@ Credit Menu - used by the 2021 re-release
 void M_Menu_Credits_f(void)
 {}
 
+#ifndef NO_PUBLIC
 void M_Menu_SearchInternet_f(void) // woods
 {
-	Cbuf_AddText("steamserver 0"); //avião
+	Cbuf_AddText("steamserver 0"); //aviï¿½o
 	M_Menu_Search_f(SLIST_INTERNET);
 }
+#endif
 
 static struct
 {
@@ -15144,7 +15439,9 @@ static struct
 	{"menu_save", M_Menu_Save_f},
 	{"menu_skill", M_Menu_Skill_f},
 	{"menu_multiplayer", M_Menu_MultiPlayer_f},
+#ifndef NO_PUBLIC
 	{"menu_slist", M_Menu_SearchInternet_f},
+#endif
 	{"menu_setup", M_Menu_Setup_f},
 	{"menu_options", M_Menu_Options_f},
 	{"menu_keys", M_Menu_Keys_f},
@@ -15540,6 +15837,10 @@ void M_Draw(void)
 		M_GameOver_Draw();
 		break;
 
+	case m_modal:
+		M_Modal_Draw();
+		break;
+
 	case m_controller:
 		M_Controller_Draw();
 		return;
@@ -15725,6 +16026,10 @@ void M_Keydown(int key)
 		M_GameOver_Key(key);
 		return;
 
+	case m_modal:
+		M_Modal_Key(key);
+		return;
+
 	case m_controller:
 		M_Controller_Key(key);
 		return;
@@ -15906,6 +16211,10 @@ void M_Mousemove(int x, int y) // woods #mousemenu
 		M_GameOver_Mousemove(x, y);
 		return;
 
+	case m_modal:
+		M_Modal_Mousemove(x, y);
+		return;
+
 	case m_controller:
 		M_Controller_Mousemove(x, y);
 		return;
@@ -16034,6 +16343,4 @@ void M_CheckMods(void) // woods #modsmenu (iw)
 
 	m_skill_usecustomtitle = 1;/*M_CheckCustomGfx("gfx/p_skill.lmp",
 		"gfx/ttl_sgl.lmp", 6728, sgl_hashes, countof(sgl_hashes));*/
-
-	M_Campaign_UnloadMaps();
 }

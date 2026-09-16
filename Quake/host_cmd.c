@@ -2492,6 +2492,7 @@ static void Host_Randmap_f(void)
 		}
 	}
 }
+
 //avião: corrected save name
 char* GetLastSavedFile(char* output, size_t output_size) {
 	char name[MAX_OSPATH];
@@ -2538,7 +2539,14 @@ char* GetLastSavedFile(char* output, size_t output_size) {
 	return NULL;
 }
 
+//avião: custom modal
+void Host_CustomModal(void)
+{
+	if (cls.state == ca_dedicated || cls.demoplayback)
+		return;
 
+	M_Menu_CustomModal_f();
+}
 
 /*
 ==================
@@ -2565,8 +2573,6 @@ static qboolean Host_AutoLoad(void)
 		case 1:
 			M_ToggleMenu(69);
 			return true;
-			//GetLastSavedFile(load, sizeof(load));
-			//break;
 		case 2:
 			return false;
 		}
@@ -2638,7 +2644,7 @@ static void Host_Changelevel_f(void)
 #ifdef BDDPRE4
 static qboolean Host_IntermissionRunning(void)
 {
-	ddef_t	*def;
+	ddef_t* def;
 
 	def = ED_FindGlobal("intermission_running");
 	if (!def || (def->type & ~DEF_SAVEGLOBAL) != ev_float || def->ofs >= qcvm->progs->numglobals)
@@ -2647,7 +2653,7 @@ static qboolean Host_IntermissionRunning(void)
 		return false;
 	}
 
-	return ((eval_t *)(qcvm->globals + def->ofs))->_float != 0;
+	return ((eval_t*)(qcvm->globals + def->ofs))->_float != 0;
 }
 
 static void Host_FinaleRestart_f(void)

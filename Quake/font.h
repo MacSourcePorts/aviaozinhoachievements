@@ -22,14 +22,18 @@ typedef struct {
 
 extern UnicodeBlock unicode_blocks[];
 
-int font_index;
+extern int font_index;
 
 void select_font(void);
+qboolean select_font_for_language(const char *locfile);
+void reload_fonts(void);
 int generate_font_pngs();
 int setup_fonts();
 void draw_character_quad_ex(int x, int y, Uint32 codepoint, int r, int g, int b);
 char* to_utf8(const char* str);
 Uint32 utf8_decode_nth(const char* input,int index,size_t length);
+size_t utf8_strlen(const char* input, size_t length);
+size_t utf8_byte_offset(const char* input, size_t index, size_t length);
 void get_texture_data(GLuint textureID, SDL_Surface** surface);
 int copy_glyph(UnicodeBlock* block, SDL_Surface* glyph, SDL_Surface* destination, int columns, Uint32 codepoint);
 int copy_single_glyph(UnicodeBlock* block, SDL_Surface* source, SDL_Surface* destination, int columns, Uint32 codepoint);
