@@ -402,6 +402,9 @@ if(WIN32)
         _WINSOCK_DEPRECATED_NO_WARNINGS
         _USE_WINSOCK2
         USE_SDL2_TTF
+    )
+endif()
+    
 if(QS_BDD4_WARNING)
     target_compile_definitions(quakespasm PRIVATE
         BDD4_WARNING
