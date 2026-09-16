@@ -997,7 +997,7 @@ static void SCR_CalcRefdef(void)
 	size = scr_viewsize.value;
 	scale = CLAMP(1.0f, scr_sbarscale.value, (float)glwidth / 320.0f);
 
-	if (size >= 120 || cl.intermission || (SCR_SBARALPHA < 1 || cl.qcvm.extfuncs.CSQC_DrawHud || cl.qcvm.extfuncs.CSQC_UpdateView)) //johnfitz -- scr_sbaralpha.value. Spike -- simple csqc assumes fullscreen video the same way.
+	if (size >= 120 || cl.intermission || (scr_sbaralpha.value < 1 || cl.qcvm.extfuncs.CSQC_DrawHud || cl.qcvm.extfuncs.CSQC_UpdateView)) //johnfitz -- scr_sbaralpha.value. Spike -- simple csqc assumes fullscreen video the same way.
 		sb_lines = 0;
 	else if (size >= 110)
 		sb_lines = 24 * scale;
@@ -1249,7 +1249,7 @@ void SCR_DrawFPS(void)
 	static int	oldframecount = 0;
 	double	elapsed_time;
 	int	frames;
-	// avião
+	// aviï¿½o
 	int clampedSbar = CLAMP(1, (int)scr_sbar.value, 4);
 
 	elapsed_time = realtime - oldtime;
@@ -1500,7 +1500,7 @@ void SCR_DrawClock(void)
 	char	str[30];
 	int x, y;
 
-	// avião
+	// aviï¿½o
 	int clampedSbar = CLAMP(1, (int)scr_sbar.value, 4);
 
 	if (scr_viewsize.value >= 130)
@@ -1605,7 +1605,7 @@ void SCR_ShowPing(void)
 	char	num[12];
 	scoreboard_t* s;
 
-	// avião
+	// aviï¿½o
 	int clampedSbar = CLAMP(1, (int)scr_sbar.value, 4);
 
 	if (scr_viewsize.value >= 130)
@@ -1683,7 +1683,7 @@ void SCR_ShowPL(void)
 	static int lastPLTime = 0;
 	char			num[12];
 
-	// avião
+	// aviï¿½o
 	int clampedSbar = CLAMP(1, (int)scr_sbar.value, 4);
 
 	if (scr_viewsize.value >= 130)
@@ -2138,7 +2138,7 @@ void SCR_ShowObsFrags(void)
 	char buf2[15];
 	const char* obs;
 	const char* star_obs;
-	// avião
+	// aviï¿½o
 	int clampedSbar = CLAMP(1, (int)scr_sbar.value, 4);
 
 	if (cl.intermission || qeintermission || crxintermission)
@@ -2217,7 +2217,7 @@ void SCR_ShowObsFrags(void)
 
 void Draw_GetScoreboardTransform(vrect_t* bounds, vrect_t* viewport) // woods #eyemouse
 {
-	// avião
+	// aviï¿½o
 	int clampedSbar = CLAMP(1, (int)scr_sbar.value, 4);
 
 	if (clampedSbar == 3)
@@ -2254,7 +2254,7 @@ void IN_ObsFragsClick(int x, int y) // woods #eyemouse
 
 	vrect_t bounds, viewport;
 	Draw_GetScoreboardTransform(&bounds, &viewport);
-	// avião
+	// aviï¿½o
 	int clampedSbar = CLAMP(1, (int)scr_sbar.value, 4);
 
 	float scale;
@@ -2626,7 +2626,7 @@ void SCR_DrawSpeed(void)
 
 	char			st[64];
 	int				x, y;
-	// avião
+	// aviï¿½o
 	int clampedSbar = CLAMP(1, (int)scr_sbar.value, 4);
 	float			speed = 0;
 
@@ -2694,7 +2694,7 @@ void SCR_DrawMovementKeys(void)
 	extern kbutton_t in_moveleft, in_moveright, in_forward, in_back, in_jump, in_up;
 
 	int x, y, size = 8;
-	// avião
+	// aviï¿½o
 	int clampedSbar = CLAMP(1, (int)scr_sbar.value, 4);
 
 	switch (clampedSbar)
@@ -2758,7 +2758,7 @@ void SCR_Mute(void)
 	if (scr_viewsize.value > 110)
 		return;
 
-	// avião
+	// aviï¿½o
 	int clampedSbar = CLAMP(1, (int)scr_sbar.value, 4);
 
 	if (!strcmp(mute, "y"))
@@ -2848,7 +2848,7 @@ void SCR_Observing(void)
 		observing = Info_GetKey(cl.scores[cl.realviewentity - 1].userinfo, "observing", buf3, sizeof(buf3));
 		color = cl.scores[cl.viewentity - 1].pants.basic; // get color 0-13
 		color = Sbar_ColorForMap((color & 15) << 4); // translate to proper drawfill color
-		// avião
+		// aviï¿½o
 		int clampedSbar = CLAMP(1, (int)scr_sbar.value, 4);
 
 		y = 190;
@@ -3798,7 +3798,7 @@ void SCR_DrawObsTimers(void)
 	// Position setup
 	int base_y = 0;
 	int x = 0;
-	// avião
+	// aviï¿½o
 	int clampedSbar = CLAMP(1, (int)scr_sbar.value, 4);
 
 	// Set canvas and calculate positions based on HUD type
@@ -4272,7 +4272,7 @@ void SCR_DrawNotifyString(void) // woods add ^m support
 	}
 }
 
-//avião: custom autoload
+//aviï¿½o: custom autoload
 qboolean scr_drawautoload;
 
 int m_gameover_cursor = 0;
@@ -4601,7 +4601,7 @@ void SCR_UpdateScreen(void)
 		Draw_FadeScreen();
 		SCR_DrawNotifyString();
 	}
-	else if (scr_drawautoload) //avião: custom autoload
+	else if (scr_drawautoload) //aviï¿½o: custom autoload
 	{
 		if (con_forcedup)
 			Draw_ConsoleBackground();
